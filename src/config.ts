@@ -21,6 +21,9 @@ export const config = {
   // OpenAI
   openaiApiKey: requireEnv("OPENAI_API_KEY"),
 
+  // Web upload
+  uploadPassword: requireEnv("UPLOAD_PASSWORD"),
+
   // Server
   port: parseInt(process.env.PORT || "3000", 10),
   nodeEnv: process.env.NODE_ENV || "development",
