@@ -85,8 +85,9 @@ export async function handleIncomingSms(
 
   console.log(`[SMS <- ${from}] "${messageText}" (${mediaUrls.length} images)`);
 
-  // Only respond to wife's number
-  if (from !== config.wifePhoneNumber) {
+  // Only respond to authorized numbers (wife or husband)
+  const authorizedNumbers = [config.wifePhoneNumber, config.husbandPhoneNumber];
+  if (!authorizedNumbers.includes(from)) {
     console.log(`Ignoring message from unauthorized number: ${from}`);
     res.status(200).send("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>");
     return;
