@@ -1,3 +1,4 @@
+import { PasswordPage } from "./pages/PasswordPage";
 import { UploadPage } from "./pages/UploadPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import { DonePage } from "./pages/DonePage";
@@ -5,9 +6,13 @@ import { ErrorPage } from "./pages/ErrorPage";
 import type { PageData } from "./types";
 
 export function App() {
-  const pageData: PageData = window.__PAGE_DATA__ || { page: "upload" };
+  const pageData: PageData = window.__PAGE_DATA__ || { page: "password" };
 
   switch (pageData.page) {
+    case "password":
+      return <PasswordPage error={pageData.error} />;
+    case "upload":
+      return <UploadPage error={pageData.error} />;
     case "review":
       return (
         <ReviewPage
@@ -22,8 +27,7 @@ export function App() {
       return <DonePage receipt={pageData.receipt!} />;
     case "error":
       return <ErrorPage error={pageData.error || "An error occurred"} />;
-    case "upload":
     default:
-      return <UploadPage error={pageData.error} />;
+      return <PasswordPage error={pageData.error} />;
   }
 }

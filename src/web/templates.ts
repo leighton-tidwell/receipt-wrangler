@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 interface PageData {
-  page: "upload" | "review" | "done" | "error";
+  page: "password" | "upload" | "review" | "done" | "error";
   error?: string;
   receipt?: ParsedReceipt;
   imageData?: string[];
@@ -25,15 +25,7 @@ function escapeForScript(str: string): string {
     .replace(/\r/g, "\\r");
 }
 
-function getClientHtml(): string {
-  // Try to read the built client index.html
-  const clientDistPath = join(__dirname, "../../dist/client/index.html");
-
-  if (existsSync(clientDistPath)) {
-    return readFileSync(clientDistPath, "utf-8");
-  }
-
-  // Fallback for development - serve a simple HTML that loads from Vite dev server
+function getDevHtml(): string {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -46,15 +38,27 @@ function getClientHtml(): string {
   </head>
   <body>
     <div id="app"></div>
-    <script>
-      // Development mode: redirect to Vite dev server if not loaded from there
-      if (!window.__VITE_DEV__) {
-        console.log('Loading from Vite dev server...');
-      }
-    </script>
+    <script type="module" src="http://localhost:5173/@vite/client"></script>
     <script type="module" src="http://localhost:5173/src/main.tsx"></script>
   </body>
 </html>`;
+}
+
+function getClientHtml(): string {
+  // In development, always use dev HTML with Vite HMR
+  if (process.env.NODE_ENV !== "production") {
+    return getDevHtml();
+  }
+
+  // In production, read the built client index.html
+  const clientDistPath = join(__dirname, "../../dist/client/index.html");
+
+  if (existsSync(clientDistPath)) {
+    return readFileSync(clientDistPath, "utf-8");
+  }
+
+  // Fallback to dev HTML if no build exists
+  return getDevHtml();
 }
 
 function renderPage(pageData: PageData): string {
@@ -69,6 +73,13 @@ function renderPage(pageData: PageData): string {
   return html;
 }
 
+export function passwordPage(error?: string): string {
+  return renderPage({
+    page: "password",
+    error,
+  });
+}
+
 export function uploadPage(error?: string): string {
   return renderPage({
     page: "upload",
@@ -78,7 +89,6 @@ export function uploadPage(error?: string): string {
 
 export function reviewPage(
   receipt: ParsedReceipt,
-  password: string,
   imageData: string[],
   previousInstructions?: string,
   receiptText?: string,
@@ -101,7 +111,7 @@ export function donePage(receipt: ParsedReceipt): string {
   });
 }
 
-export function processingErrorPage(error: string, password: string): string {
+export function processingErrorPage(error: string): string {
   return renderPage({
     page: "error",
     error,

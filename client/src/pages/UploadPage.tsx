@@ -9,7 +9,6 @@ export function UploadPage({ error }: UploadPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [password, setPassword] = useState("");
   const [receiptText, setReceiptText] = useState("");
   const [instructions, setInstructions] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +29,7 @@ export function UploadPage({ error }: UploadPageProps) {
     setDragActive(false);
     if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
       const newFiles = Array.from(e.dataTransfer.files).filter((f) =>
-        f.type.startsWith("image/"),
+        f.type.startsWith("image/")
       );
       setSelectedFiles((prev) => [...prev, ...newFiles]);
       if (fileInputRef.current) {
@@ -59,10 +58,6 @@ export function UploadPage({ error }: UploadPageProps) {
   };
 
   const handleSubmit = (e: Event) => {
-    if (!password) {
-      e.preventDefault();
-      return;
-    }
     if (selectedFiles.length === 0 && !receiptText.trim()) {
       e.preventDefault();
       return;
@@ -127,21 +122,6 @@ export function UploadPage({ error }: UploadPageProps) {
           class="space-y-6"
         >
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-slide-up">
-            <label class="block text-sm font-medium text-slate-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={password}
-              onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
-              required
-              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
-              placeholder="Enter password"
-            />
-          </div>
-
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-slide-up stagger-1">
             <label class="block text-sm font-medium text-slate-700 mb-2">
               Receipt Image(s)
             </label>
@@ -240,7 +220,7 @@ export function UploadPage({ error }: UploadPageProps) {
             )}
           </div>
 
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-slide-up stagger-2">
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-slide-up stagger-1">
             <label class="block text-sm font-medium text-slate-700 mb-2">
               Or Paste Receipt Text
             </label>
@@ -256,7 +236,7 @@ export function UploadPage({ error }: UploadPageProps) {
             />
           </div>
 
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-slide-up stagger-3">
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-slide-up stagger-2">
             <label class="block text-sm font-medium text-slate-700 mb-2">
               Instructions{" "}
               <span class="text-slate-400 font-normal">(optional)</span>

@@ -5,6 +5,7 @@ import { processReceipt } from "../agent/index.js";
 import { sendToHusband } from "../twilio/send.js";
 import { formatFinalSummary } from "../utils/format.js";
 import {
+  passwordPage,
   uploadPage,
   reviewPage,
   donePage,
@@ -24,11 +25,6 @@ function checkPassword(password: string): boolean {
   return password === config.uploadPassword;
 }
 
-function getPasswordFromRequest(req: Request): string {
-  // Check body first, then cookie
-  return req.body?.password || req.cookies?.receiptPassword || "";
-}
-
 function setPasswordCookie(res: Response, password: string): void {
   res.cookie("receiptPassword", password, {
     httpOnly: true,
@@ -37,24 +33,43 @@ function setPasswordCookie(res: Response, password: string): void {
   });
 }
 
-// GET /upload - Show upload form
-export function getUploadPage(_req: Request, res: Response): void {
-  res.send(uploadPage());
+function hasValidPasswordCookie(req: Request): boolean {
+  const cookiePassword = req.cookies?.receiptPassword;
+  return cookiePassword && checkPassword(cookiePassword);
+}
+
+// GET /upload - Show upload form (or password page if not authenticated)
+export function getUploadPage(req: Request, res: Response): void {
+  if (hasValidPasswordCookie(req)) {
+    res.send(uploadPage());
+  } else {
+    res.send(passwordPage());
+  }
+}
+
+// POST /auth - Validate password and set cookie
+export function postAuth(req: Request, res: Response): void {
+  const { password } = req.body;
+
+  if (!checkPassword(password)) {
+    res.send(passwordPage("Invalid password"));
+    return;
+  }
+
+  setPasswordCookie(res, password);
+  res.redirect("/upload");
 }
 
 // POST /upload - Process receipt
 export async function postUpload(req: Request, res: Response): Promise<void> {
-  const { password, instructions, receiptText } = req.body;
+  const { instructions, receiptText } = req.body;
   const files = req.files as Express.Multer.File[] | undefined;
 
-  // Check password
-  if (!checkPassword(password)) {
-    res.send(uploadPage("Invalid password"));
+  // Check for valid password cookie
+  if (!hasValidPasswordCookie(req)) {
+    res.send(passwordPage("Session expired. Please log in again."));
     return;
   }
-
-  // Set cookie for subsequent requests
-  setPasswordCookie(res, password);
 
   const hasFiles = files && files.length > 0;
   const hasText = receiptText && receiptText.trim().length > 0;
@@ -86,7 +101,7 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
     );
 
     if (result.error) {
-      res.send(processingErrorPage(result.error, password));
+      res.send(processingErrorPage(result.error));
       return;
     }
 
@@ -94,8 +109,7 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
       // For now, show the question as an error and let them add it to instructions
       res.send(
         processingErrorPage(
-          `Need clarification: ${result.clarificationQuestion}. Please add this info to your instructions and try again.`,
-          password
+          `Need clarification: ${result.clarificationQuestion}. Please add this info to your instructions and try again.`
         )
       );
       return;
@@ -105,25 +119,24 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
       // Encode image data with mime types for reprocessing
       const encodedImages = imageData.map((data, i) => `${mimeTypes[i]}|${data}`);
       const combinedInstructions = [receiptText, instructions].filter(Boolean).join("\n\n") || undefined;
-      res.send(reviewPage(result.parsedReceipt, password, encodedImages, combinedInstructions, receiptText));
+      res.send(reviewPage(result.parsedReceipt, encodedImages, combinedInstructions, receiptText));
       return;
     }
 
-    res.send(processingErrorPage("Unknown error processing receipt", password));
+    res.send(processingErrorPage("Unknown error processing receipt"));
   } catch (error) {
     console.error("Error in postUpload:", error);
-    res.send(processingErrorPage("An error occurred. Please try again.", password));
+    res.send(processingErrorPage("An error occurred. Please try again."));
   }
 }
 
 // POST /upload/reprocess - Reprocess with corrections
 export async function postReprocess(req: Request, res: Response): Promise<void> {
   const { corrections, previousInstructions, imageCount, receiptText } = req.body;
-  const password = getPasswordFromRequest(req);
 
-  // Check password
-  if (!checkPassword(password)) {
-    res.send(uploadPage("Invalid password or session expired"));
+  // Check for valid password cookie
+  if (!hasValidPasswordCookie(req)) {
+    res.send(passwordPage("Session expired. Please log in again."));
     return;
   }
 
@@ -157,30 +170,29 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
     );
 
     if (result.error) {
-      res.send(processingErrorPage(result.error, password));
+      res.send(processingErrorPage(result.error));
       return;
     }
 
     if (result.parsedReceipt) {
-      res.send(reviewPage(result.parsedReceipt, password, encodedImages, combinedInstructions, receiptText));
+      res.send(reviewPage(result.parsedReceipt, encodedImages, combinedInstructions, receiptText));
       return;
     }
 
-    res.send(processingErrorPage("Unknown error processing receipt", password));
+    res.send(processingErrorPage("Unknown error processing receipt"));
   } catch (error) {
     console.error("Error in postReprocess:", error);
-    res.send(processingErrorPage("An error occurred. Please try again.", password));
+    res.send(processingErrorPage("An error occurred. Please try again."));
   }
 }
 
 // POST /upload/confirm - Send to husband
 export async function postConfirm(req: Request, res: Response): Promise<void> {
   const { receipt } = req.body;
-  const password = getPasswordFromRequest(req);
 
-  // Check password
-  if (!checkPassword(password)) {
-    res.send(uploadPage("Invalid password or session expired"));
+  // Check for valid password cookie
+  if (!hasValidPasswordCookie(req)) {
+    res.send(passwordPage("Session expired. Please log in again."));
     return;
   }
 
@@ -198,6 +210,6 @@ export async function postConfirm(req: Request, res: Response): Promise<void> {
     res.send(donePage(parsedReceipt));
   } catch (error) {
     console.error("Error in postConfirm:", error);
-    res.send(processingErrorPage("Failed to process. Please try again.", password));
+    res.send(processingErrorPage("Failed to process. Please try again."));
   }
 }

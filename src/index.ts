@@ -6,6 +6,7 @@ import { config } from "./config.js";
 import { handleIncomingSms } from "./twilio/webhook.js";
 import {
   getUploadPage,
+  postAuth,
   postUpload,
   postReprocess,
   postConfirm,
@@ -35,6 +36,7 @@ app.post("/webhook/sms", handleIncomingSms);
 
 // Web upload endpoints
 app.get("/upload", getUploadPage);
+app.post("/auth", postAuth);
 app.post("/upload", uploadMiddleware, postUpload);
 app.post("/upload/reprocess", postReprocess);
 app.post("/upload/confirm", postConfirm);

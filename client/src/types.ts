@@ -19,7 +19,7 @@ export interface ParsedReceipt {
 }
 
 export interface PageData {
-  page: "upload" | "review" | "done" | "error";
+  page: "password" | "upload" | "review" | "done" | "error";
   error?: string;
   receipt?: ParsedReceipt;
   imageData?: string[];
