@@ -11,9 +11,9 @@ export async function sendSms(to: string, body: string): Promise<void> {
   });
 }
 
-export async function sendToWife(body: string): Promise<void> {
-  console.log(`[SMS -> Wife] ${body}`);
-  await sendSms(config.wifePhoneNumber, body);
+export async function sendToSender(to: string, body: string): Promise<void> {
+  console.log(`[SMS -> ${to}] ${body}`);
+  await sendSms(to, body);
 }
 
 export async function sendToHusband(body: string): Promise<void> {

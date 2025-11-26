@@ -35,15 +35,17 @@ export interface ConversationData {
   pendingImages: string[]; // URLs of images waiting to be processed
   parsedReceipt: ParsedReceipt | null;
   userGuidance: string | null; // Any instructions the user provided
+  senderPhone: string | null; // Who started this conversation
   lastActivity: Date;
 }
 
-// In-memory store - only one conversation (wife's number)
+// In-memory store - one conversation at a time
 let conversation: ConversationData = {
   state: "IDLE",
   pendingImages: [],
   parsedReceipt: null,
   userGuidance: null,
+  senderPhone: null,
   lastActivity: new Date(),
 };
 
@@ -65,6 +67,7 @@ export function resetConversation(): void {
     pendingImages: [],
     parsedReceipt: null,
     userGuidance: null,
+    senderPhone: null,
     lastActivity: new Date(),
   };
 }

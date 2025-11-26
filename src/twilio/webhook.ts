@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { config } from "../config.js";
-import { sendToWife, sendToHusband } from "./send.js";
+import { sendToSender, sendToHusband } from "./send.js";
 import {
   getConversation,
   updateConversation,
@@ -101,7 +101,7 @@ export async function handleIncomingSms(
       case "IDLE": {
         // New receipt coming in
         if (mediaUrls.length === 0 && !messageText) {
-          await sendToWife("Send me a receipt photo or paste the receipt text!");
+          await sendToSender(from, "Send me a receipt photo or paste the receipt text!");
           break;
         }
 
@@ -109,9 +109,10 @@ export async function handleIncomingSms(
           state: "PROCESSING",
           pendingImages: mediaUrls,
           userGuidance: messageText || null,
+          senderPhone: from,
         });
 
-        await sendToWife("Got it! Processing your receipt...");
+        await sendToSender(from, "Got it! Processing your receipt...");
 
         const result = await processReceipt(
           mediaUrls,
@@ -120,7 +121,7 @@ export async function handleIncomingSms(
         );
 
         if (result.error) {
-          await sendToWife(result.error);
+          await sendToSender(from, result.error);
           resetConversation();
           break;
         }
@@ -129,7 +130,7 @@ export async function handleIncomingSms(
           updateConversation({
             state: "AWAITING_ANSWER",
           });
-          await sendToWife(result.clarificationQuestion);
+          await sendToSender(from, result.clarificationQuestion);
           break;
         }
 
@@ -139,14 +140,15 @@ export async function handleIncomingSms(
             parsedReceipt: result.parsedReceipt,
           });
           const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-          await sendToWife(confirmMsg);
+          await sendToSender(from, confirmMsg);
         }
         break;
       }
 
       case "PROCESSING": {
         // Still processing, shouldn't receive messages here normally
-        await sendToWife(
+        await sendToSender(
+          conversation.senderPhone!,
           "Still processing your receipt, please wait a moment..."
         );
         break;
@@ -156,14 +158,15 @@ export async function handleIncomingSms(
         // User is answering a clarification question
         if (isRejection(messageText)) {
           resetConversation();
-          await sendToWife(
+          await sendToSender(
+            from,
             "No problem, cancelled. Send a new receipt when you're ready."
           );
           break;
         }
 
         updateConversation({ state: "PROCESSING" });
-        await sendToWife("Got it, updating the breakdown...");
+        await sendToSender(from, "Got it, updating the breakdown...");
 
         const result = await processClarificationResponse(
           conversation.pendingImages,
@@ -173,14 +176,14 @@ export async function handleIncomingSms(
         );
 
         if (result.error) {
-          await sendToWife(result.error);
+          await sendToSender(from, result.error);
           resetConversation();
           break;
         }
 
         if (result.needsClarification && result.clarificationQuestion) {
           updateConversation({ state: "AWAITING_ANSWER" });
-          await sendToWife(result.clarificationQuestion);
+          await sendToSender(from, result.clarificationQuestion);
           break;
         }
 
@@ -190,7 +193,7 @@ export async function handleIncomingSms(
             parsedReceipt: result.parsedReceipt,
           });
           const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-          await sendToWife(confirmMsg);
+          await sendToSender(from, confirmMsg);
         }
         break;
       }
@@ -198,7 +201,8 @@ export async function handleIncomingSms(
       case "AWAITING_CONFIRM": {
         // Check if they're trying to send a new receipt
         if (mediaUrls.length > 0) {
-          await sendToWife(
+          await sendToSender(
+            conversation.senderPhone!,
             "Please confirm or cancel the current receipt first (reply YES or NO), then send the new one."
           );
           break;
@@ -206,7 +210,8 @@ export async function handleIncomingSms(
 
         if (isRejection(messageText)) {
           resetConversation();
-          await sendToWife(
+          await sendToSender(
+            from,
             "Cancelled. Send a new receipt or re-send with corrections."
           );
           break;
@@ -216,7 +221,7 @@ export async function handleIncomingSms(
           if (conversation.parsedReceipt) {
             const summary = formatFinalSummary(conversation.parsedReceipt);
             await sendToHusband(summary);
-            await sendToWife("Done! Sent the breakdown to the budget.");
+            await sendToSender(from, "Done! Sent the breakdown to the budget.");
           }
           resetConversation();
           break;
@@ -224,7 +229,7 @@ export async function handleIncomingSms(
 
         // They might be providing corrections
         updateConversation({ state: "PROCESSING" });
-        await sendToWife("Got it, updating based on your feedback...");
+        await sendToSender(from, "Got it, updating based on your feedback...");
 
         const result = await processClarificationResponse(
           conversation.pendingImages,
@@ -234,7 +239,7 @@ export async function handleIncomingSms(
         );
 
         if (result.error) {
-          await sendToWife(result.error);
+          await sendToSender(from, result.error);
           resetConversation();
           break;
         }
@@ -245,14 +250,15 @@ export async function handleIncomingSms(
             parsedReceipt: result.parsedReceipt,
           });
           const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-          await sendToWife(confirmMsg);
+          await sendToSender(from, confirmMsg);
         }
         break;
       }
     }
   } catch (error) {
     console.error("Error handling SMS:", error);
-    await sendToWife(
+    await sendToSender(
+      from,
       "Sorry, something went wrong. Please try again."
     );
     resetConversation();
