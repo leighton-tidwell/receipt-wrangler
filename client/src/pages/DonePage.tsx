@@ -31,7 +31,7 @@ export function DonePage({ receipt }: DonePageProps) {
       if (extras > 0) {
         const extrasLabel = fees > 0 ? "tax/fees" : "tax";
         lines.push(
-          `${label}: ${formatMoney(breakdown.subtotal)} (+${formatMoney(extras)} ${extrasLabel})`,
+          `${label}: ${formatMoney(breakdown.total)} (incl. ${formatMoney(extras)} ${extrasLabel})`,
         );
       } else {
         lines.push(`${label}: ${formatMoney(breakdown.total)}`);
@@ -103,7 +103,7 @@ export function DonePage({ receipt }: DonePageProps) {
                     </span>
                     {(breakdown.tax > 0 || (breakdown.fees || 0) > 0) && (
                       <span class="text-slate-400 text-xs ml-1">
-                        (+{formatMoney(breakdown.tax + (breakdown.fees || 0))}{" "}
+                        (incl. {formatMoney(breakdown.tax + (breakdown.fees || 0))}{" "}
                         {(breakdown.fees || 0) > 0 ? "tax/fees" : "tax"})
                       </span>
                     )}
