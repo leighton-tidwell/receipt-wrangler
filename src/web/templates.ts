@@ -208,7 +208,6 @@ export function reviewPage(
   <div class="card">
     <h2 style="margin-top: 0;">Make Corrections</h2>
     <form method="POST" action="/upload/reprocess">
-      <input type="hidden" name="password" value="${password}">
       ${imageData.map((img, i) => `<input type="hidden" name="imageData${i}" value="${img}">`).join("")}
       <input type="hidden" name="imageCount" value="${imageData.length}">
       <input type="hidden" name="previousInstructions" value="${previousInstructions || ""}">
@@ -225,7 +224,6 @@ export function reviewPage(
     <h2 style="margin-top: 0;">Confirm &amp; Send</h2>
     <p>This will send the summary to the budget.</p>
     <form method="POST" action="/upload/confirm">
-      <input type="hidden" name="password" value="${password}">
       <input type="hidden" name="receipt" value='${JSON.stringify(receipt)}'>
 
       <button type="submit">Confirm &amp; Send</button>

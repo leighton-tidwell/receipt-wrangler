@@ -19,6 +19,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.8.0",
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.5",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
@@ -28,6 +29,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.73",
     "ai": "^5.0.102",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "multer": "^2.0.2",

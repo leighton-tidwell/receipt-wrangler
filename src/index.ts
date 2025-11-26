@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { config } from "./config.js";
 import { handleIncomingSms } from "./twilio/webhook.js";
 import {
@@ -14,6 +15,7 @@ const app = express();
 // Parse URL-encoded bodies (Twilio sends form data)
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.json({ limit: "50mb" }));
+app.use(cookieParser());
 
 // Health check endpoint
 app.get("/health", (_req, res) => {

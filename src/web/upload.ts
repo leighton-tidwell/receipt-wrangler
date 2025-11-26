@@ -24,6 +24,19 @@ function checkPassword(password: string): boolean {
   return password === config.uploadPassword;
 }
 
+function getPasswordFromRequest(req: Request): string {
+  // Check body first, then cookie
+  return req.body?.password || req.cookies?.receiptPassword || "";
+}
+
+function setPasswordCookie(res: Response, password: string): void {
+  res.cookie("receiptPassword", password, {
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: "strict",
+  });
+}
+
 // GET /upload - Show upload form
 export function getUploadPage(_req: Request, res: Response): void {
   res.send(uploadPage());
@@ -39,6 +52,9 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
     res.send(uploadPage("Invalid password"));
     return;
   }
+
+  // Set cookie for subsequent requests
+  setPasswordCookie(res, password);
 
   const hasFiles = files && files.length > 0;
   const hasText = receiptText && receiptText.trim().length > 0;
@@ -102,11 +118,12 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
 
 // POST /upload/reprocess - Reprocess with corrections
 export async function postReprocess(req: Request, res: Response): Promise<void> {
-  const { password, corrections, previousInstructions, imageCount, receiptText } = req.body;
+  const { corrections, previousInstructions, imageCount, receiptText } = req.body;
+  const password = getPasswordFromRequest(req);
 
   // Check password
   if (!checkPassword(password)) {
-    res.send(uploadPage("Invalid password"));
+    res.send(uploadPage("Invalid password or session expired"));
     return;
   }
 
@@ -158,11 +175,12 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
 
 // POST /upload/confirm - Send to husband
 export async function postConfirm(req: Request, res: Response): Promise<void> {
-  const { password, receipt } = req.body;
+  const { receipt } = req.body;
+  const password = getPasswordFromRequest(req);
 
   // Check password
   if (!checkPassword(password)) {
-    res.send(uploadPage("Invalid password"));
+    res.send(uploadPage("Invalid password or session expired"));
     return;
   }
 
