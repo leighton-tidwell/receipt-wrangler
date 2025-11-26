@@ -5,12 +5,13 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "concurrently -k -n server,client -c blue,magenta \"pnpm dev:server\" \"pnpm dev:client\"",
+    "dev:server": "NODE_ENV=development tsx watch src/index.ts",
     "dev:client": "cd client && pnpm dev",
     "build": "pnpm build:client && pnpm build:server",
     "build:client": "cd client && pnpm install && pnpm build",
     "build:server": "tsc",
-    "start": "node dist/index.js"
+    "start": "NODE_ENV=production node dist/index.js"
   },
   "keywords": [
     "twilio",
@@ -26,6 +27,7 @@
     "@types/express": "^5.0.5",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
+    "concurrently": "^9.2.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
