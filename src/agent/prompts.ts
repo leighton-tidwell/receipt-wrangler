@@ -39,12 +39,14 @@ BATHROOM SUPPLIES:
 - Razors, shaving cream
 - Bathroom-specific cleaners
 
-## TAX HANDLING
+## TAX, FEES, AND TIPS
 
 IMPORTANT: Do NOT calculate tax per item. Instead:
 1. Read the total tax amount from the receipt
 2. Split that tax EVENLY across all categories that have items
 3. Each category's tax = store's total tax / number of categories with items
+
+Also split any delivery fees, service fees, or tips evenly across all categories with items. Track these in the "fees" field (not in subtotal). The total for each category = subtotal + fees + tax.
 
 ## OUTPUT FORMAT
 
@@ -57,12 +59,14 @@ Only include categories that have items. Do not include empty categories.
     "groceries": {
       "items": [{"name": "Milk", "price": 399, "taxable": false}],
       "subtotal": 399,
+      "fees": 0,
       "tax": 50,
       "total": 449
     },
     "houseSupplies": {
       "items": [{"name": "Paper Towels", "price": 599, "taxable": true}],
       "subtotal": 599,
+      "fees": 0,
       "tax": 50,
       "total": 649
     }

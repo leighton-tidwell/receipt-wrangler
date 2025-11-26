@@ -7,6 +7,7 @@ export interface ReceiptItem {
 export interface CategoryBreakdown {
   items: ReceiptItem[];
   subtotal: number;
+  fees: number;
   tax: number;
   total: number;
 }

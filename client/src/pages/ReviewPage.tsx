@@ -24,12 +24,14 @@ export function ReviewPage({
   const [corrections, setCorrections] = useState("");
 
   let subtotal = 0;
+  let totalFees = 0;
   let totalTax = 0;
   for (const key of Object.keys(receipt.categories)) {
     subtotal += receipt.categories[key].subtotal;
+    totalFees += receipt.categories[key].fees || 0;
     totalTax += receipt.categories[key].tax;
   }
-  const total = subtotal + totalTax;
+  const total = subtotal + totalFees + totalTax;
   const hasMismatch = Math.abs(total - receipt.originalTotal) > 1;
 
   const handleReprocess = () => {
@@ -121,9 +123,10 @@ export function ReviewPage({
                     <span class="font-bold text-slate-800">
                       {formatMoney(breakdown.total)}
                     </span>
-                    {breakdown.tax > 0 && (
+                    {(breakdown.tax > 0 || (breakdown.fees || 0) > 0) && (
                       <span class="text-slate-400 text-xs ml-1">
-                        (+{formatMoney(breakdown.tax)} tax)
+                        (+{formatMoney(breakdown.tax + (breakdown.fees || 0))}{" "}
+                        {(breakdown.fees || 0) > 0 ? "tax/fees" : "tax"})
                       </span>
                     )}
                   </div>
@@ -156,6 +159,12 @@ export function ReviewPage({
               <span class="text-slate-500">Subtotal</span>
               <span class="text-slate-700">{formatMoney(subtotal)}</span>
             </div>
+            {totalFees > 0 && (
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-500">Fees</span>
+                <span class="text-slate-700">{formatMoney(totalFees)}</span>
+              </div>
+            )}
             {totalTax > 0 && (
               <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Tax</span>

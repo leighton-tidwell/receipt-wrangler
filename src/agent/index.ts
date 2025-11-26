@@ -14,6 +14,7 @@ const receiptItemSchema = z.object({
 const categoryBreakdownSchema = z.object({
   items: z.array(receiptItemSchema),
   subtotal: z.number(),
+  fees: z.number(),
   tax: z.number(),
   total: z.number(),
 });

@@ -11,12 +11,14 @@ export function DonePage({ receipt }: DonePageProps) {
   const [copied, setCopied] = useState(false);
 
   let subtotal = 0;
+  let totalFees = 0;
   let totalTax = 0;
   for (const key of Object.keys(receipt.categories)) {
     subtotal += receipt.categories[key].subtotal;
+    totalFees += receipt.categories[key].fees || 0;
     totalTax += receipt.categories[key].tax;
   }
-  const total = subtotal + totalTax;
+  const total = subtotal + totalFees + totalTax;
 
   const buildSummaryText = () => {
     const lines: string[] = [`${receipt.storeName} - ${receipt.date}`, ""];
@@ -24,9 +26,12 @@ export function DonePage({ receipt }: DonePageProps) {
     for (const [key, breakdown] of Object.entries(receipt.categories)) {
       if (breakdown.items.length === 0) continue;
       const label = getCategoryLabel(key);
-      if (breakdown.tax > 0) {
+      const fees = breakdown.fees || 0;
+      const extras = breakdown.tax + fees;
+      if (extras > 0) {
+        const extrasLabel = fees > 0 ? "tax/fees" : "tax";
         lines.push(
-          `${label}: ${formatMoney(breakdown.subtotal)} (+${formatMoney(breakdown.tax)} tax)`,
+          `${label}: ${formatMoney(breakdown.subtotal)} (+${formatMoney(extras)} ${extrasLabel})`,
         );
       } else {
         lines.push(`${label}: ${formatMoney(breakdown.total)}`);
@@ -96,9 +101,10 @@ export function DonePage({ receipt }: DonePageProps) {
                     <span class="font-medium text-slate-800">
                       {formatMoney(breakdown.total)}
                     </span>
-                    {breakdown.tax > 0 && (
+                    {(breakdown.tax > 0 || (breakdown.fees || 0) > 0) && (
                       <span class="text-slate-400 text-xs ml-1">
-                        (+{formatMoney(breakdown.tax)} tax)
+                        (+{formatMoney(breakdown.tax + (breakdown.fees || 0))}{" "}
+                        {(breakdown.fees || 0) > 0 ? "tax/fees" : "tax"})
                       </span>
                     )}
                   </div>
