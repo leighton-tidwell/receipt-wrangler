@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
+import crypto from "crypto";
 import multer from "multer";
 import { config } from "../config.js";
 import { processReceipt } from "../agent/index.js";
@@ -21,33 +22,54 @@ const upload = multer({
 
 export const uploadMiddleware: RequestHandler = upload.array("images", 10) as RequestHandler;
 
+// Session management
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+const sessions = new Map<string, number>(); // token -> expiration timestamp
+
+function createSession(): string {
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiresAt = Date.now() + SESSION_DURATION_MS;
+  sessions.set(token, expiresAt);
+  return token;
+}
+
+function isValidSession(token: string | undefined): boolean {
+  if (!token) return false;
+  const expiresAt = sessions.get(token);
+  if (!expiresAt) return false;
+  if (Date.now() > expiresAt) {
+    sessions.delete(token);
+    return false;
+  }
+  return true;
+}
+
 function checkPassword(password: string): boolean {
   return password === config.uploadPassword;
 }
 
-function setPasswordCookie(res: Response, password: string): void {
-  res.cookie("receiptPassword", password, {
+function setSessionCookie(res: Response, token: string): void {
+  res.cookie("session", token, {
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: SESSION_DURATION_MS,
     sameSite: "strict",
   });
 }
 
-function hasValidPasswordCookie(req: Request): boolean {
-  const cookiePassword = req.cookies?.receiptPassword;
-  return cookiePassword && checkPassword(cookiePassword);
+function hasValidSession(req: Request): boolean {
+  return isValidSession(req.cookies?.session);
 }
 
 // GET /upload - Show upload form (or password page if not authenticated)
 export function getUploadPage(req: Request, res: Response): void {
-  if (hasValidPasswordCookie(req)) {
+  if (hasValidSession(req)) {
     res.send(uploadPage());
   } else {
     res.send(passwordPage());
   }
 }
 
-// POST /auth - Validate password and set cookie
+// POST /auth - Validate password and create session
 export function postAuth(req: Request, res: Response): void {
   const { password } = req.body;
 
@@ -56,7 +78,8 @@ export function postAuth(req: Request, res: Response): void {
     return;
   }
 
-  setPasswordCookie(res, password);
+  const token = createSession();
+  setSessionCookie(res, token);
   res.redirect("/upload");
 }
 
@@ -65,8 +88,8 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
   const { instructions, receiptText } = req.body;
   const files = req.files as Express.Multer.File[] | undefined;
 
-  // Check for valid password cookie
-  if (!hasValidPasswordCookie(req)) {
+  // Check for valid session
+  if (!hasValidSession(req)) {
     res.send(passwordPage("Session expired. Please log in again."));
     return;
   }
@@ -134,8 +157,8 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
 export async function postReprocess(req: Request, res: Response): Promise<void> {
   const { corrections, previousInstructions, imageCount, receiptText } = req.body;
 
-  // Check for valid password cookie
-  if (!hasValidPasswordCookie(req)) {
+  // Check for valid session
+  if (!hasValidSession(req)) {
     res.send(passwordPage("Session expired. Please log in again."));
     return;
   }
@@ -190,8 +213,8 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
 export async function postConfirm(req: Request, res: Response): Promise<void> {
   const { receipt } = req.body;
 
-  // Check for valid password cookie
-  if (!hasValidPasswordCookie(req)) {
+  // Check for valid session
+  if (!hasValidSession(req)) {
     res.send(passwordPage("Session expired. Please log in again."));
     return;
   }
