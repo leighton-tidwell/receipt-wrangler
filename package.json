@@ -6,7 +6,10 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "dev:client": "cd client && pnpm dev",
+    "build": "pnpm build:client && pnpm build:server",
+    "build:client": "cd client && pnpm install && pnpm build",
+    "build:server": "tsc",
     "start": "node dist/index.js"
   },
   "keywords": [

@@ -1,5 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { config } from "./config.js";
 import { handleIncomingSms } from "./twilio/webhook.js";
 import {
@@ -10,12 +12,18 @@ import {
   uploadMiddleware,
 } from "./web/upload.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // Parse URL-encoded bodies (Twilio sends form data)
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
+
+// Serve static files from built client (JS, CSS, etc.)
+app.use(express.static(join(__dirname, "../dist/client"), {
+  index: false, // Don't serve index.html automatically - we handle routing
+}));
 
 // Health check endpoint
 app.get("/health", (_req, res) => {
