@@ -207,7 +207,7 @@ export function reviewPage(
 
   <div class="card">
     <h2 style="margin-top: 0;">Make Corrections</h2>
-    <form method="POST" action="/upload/reprocess" enctype="multipart/form-data">
+    <form method="POST" action="/upload/reprocess">
       <input type="hidden" name="password" value="${password}">
       ${imageData.map((img, i) => `<input type="hidden" name="imageData${i}" value="${img}">`).join("")}
       <input type="hidden" name="imageCount" value="${imageData.length}">
