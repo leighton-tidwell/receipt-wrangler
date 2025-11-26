@@ -1,16 +1,35 @@
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { z } from "zod";
 import { config } from "../config.js";
 import { SYSTEM_PROMPT } from "./prompts.js";
 import type { ParsedReceipt } from "../state/conversation.js";
+
+const receiptItemSchema = z.object({
+  name: z.string(),
+  price: z.number(),
+  taxable: z.boolean(),
+});
+
+const categoryBreakdownSchema = z.object({
+  items: z.array(receiptItemSchema),
+  subtotal: z.number(),
+  tax: z.number(),
+  total: z.number(),
+});
+
+const receiptResponseSchema = z.object({
+  storeName: z.string(),
+  date: z.string(),
+  categories: z.record(z.string(), categoryBreakdownSchema),
+  originalTotal: z.number(),
+});
 
 // Ensure OpenAI API key is set
 process.env.OPENAI_API_KEY = config.openaiApiKey;
 
 interface AgentResponse {
   parsedReceipt: ParsedReceipt | null;
-  needsClarification: boolean;
-  clarificationQuestion: string | null;
   error: string | null;
 }
 
@@ -21,7 +40,9 @@ export async function processReceipt(
 ): Promise<AgentResponse> {
   try {
     // Build the content array for the message
-    const content: Array<{ type: "text" } & { text: string } | { type: "image"; image: URL }> = [];
+    const content: Array<
+      ({ type: "text" } & { text: string }) | { type: "image"; image: URL }
+    > = [];
 
     // Add any text content (pasted receipt or user message)
     let promptText = "Please categorize this receipt.";
@@ -38,8 +59,9 @@ export async function processReceipt(
       content.push({ type: "image", image: new URL(url) });
     }
 
-    const { text } = await generateText({
+    const { object } = await generateObject({
       model: openai("gpt-5-mini"),
+      schema: receiptResponseSchema,
       system: SYSTEM_PROMPT,
       messages: [
         {
@@ -47,66 +69,24 @@ export async function processReceipt(
           content,
         },
       ],
-      maxOutputTokens: 4096,
     });
 
-    // Parse the JSON response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return {
-        parsedReceipt: null,
-        needsClarification: false,
-        clarificationQuestion: null,
-        error: "Could not parse receipt. Please try again with a clearer image.",
-      };
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    if (parsed.needsClarification) {
-      return {
-        parsedReceipt: null,
-        needsClarification: true,
-        clarificationQuestion: parsed.clarificationQuestion,
-        error: null,
-      };
-    }
-
-    // Convert to our ParsedReceipt type
     const receipt: ParsedReceipt = {
-      storeName: parsed.storeName,
-      date: parsed.date,
-      categories: parsed.categories,
-      originalTotal: parsed.originalTotal,
+      storeName: object.storeName,
+      date: object.date,
+      categories: object.categories as ParsedReceipt["categories"],
+      originalTotal: object.originalTotal,
     };
 
     return {
       parsedReceipt: receipt,
-      needsClarification: false,
-      clarificationQuestion: null,
       error: null,
     };
   } catch (error) {
     console.error("Error processing receipt:", error);
     return {
       parsedReceipt: null,
-      needsClarification: false,
-      clarificationQuestion: null,
       error: "An error occurred processing the receipt. Please try again.",
     };
   }
-}
-
-export async function processClarificationResponse(
-  originalImages: string[],
-  originalText: string | null,
-  originalGuidance: string | null,
-  clarificationAnswer: string
-): Promise<AgentResponse> {
-  // Re-process with the clarification answer as additional guidance
-  const combinedGuidance = originalGuidance
-    ? `${originalGuidance}\n\nAdditional clarification: ${clarificationAnswer}`
-    : clarificationAnswer;
-
-  return processReceipt(originalImages, originalText, combinedGuidance);
 }

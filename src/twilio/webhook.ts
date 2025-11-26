@@ -6,7 +6,7 @@ import {
   updateConversation,
   resetConversation,
 } from "../state/conversation.js";
-import { processReceipt, processClarificationResponse } from "../agent/index.js";
+import { processReceipt } from "../agent/index.js";
 import {
   formatConfirmationMessage,
   formatFinalSummary,
@@ -126,14 +126,6 @@ export async function handleIncomingSms(
           break;
         }
 
-        if (result.needsClarification && result.clarificationQuestion) {
-          updateConversation({
-            state: "AWAITING_ANSWER",
-          });
-          await sendToSender(from, result.clarificationQuestion);
-          break;
-        }
-
         if (result.parsedReceipt) {
           updateConversation({
             state: "AWAITING_CONFIRM",
@@ -151,50 +143,6 @@ export async function handleIncomingSms(
           conversation.senderPhone!,
           "Still processing your receipt, please wait a moment..."
         );
-        break;
-      }
-
-      case "AWAITING_ANSWER": {
-        // User is answering a clarification question
-        if (isRejection(messageText)) {
-          resetConversation();
-          await sendToSender(
-            from,
-            "No problem, cancelled. Send a new receipt when you're ready."
-          );
-          break;
-        }
-
-        updateConversation({ state: "PROCESSING" });
-        await sendToSender(from, "Got it, updating the breakdown...");
-
-        const result = await processClarificationResponse(
-          conversation.pendingImages,
-          null,
-          conversation.userGuidance,
-          messageText
-        );
-
-        if (result.error) {
-          await sendToSender(from, result.error);
-          resetConversation();
-          break;
-        }
-
-        if (result.needsClarification && result.clarificationQuestion) {
-          updateConversation({ state: "AWAITING_ANSWER" });
-          await sendToSender(from, result.clarificationQuestion);
-          break;
-        }
-
-        if (result.parsedReceipt) {
-          updateConversation({
-            state: "AWAITING_CONFIRM",
-            parsedReceipt: result.parsedReceipt,
-          });
-          const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-          await sendToSender(from, confirmMsg);
-        }
         break;
       }
 
@@ -227,15 +175,18 @@ export async function handleIncomingSms(
           break;
         }
 
-        // They might be providing corrections
+        // They're providing corrections - reprocess with feedback
         updateConversation({ state: "PROCESSING" });
         await sendToSender(from, "Got it, updating based on your feedback...");
 
-        const result = await processClarificationResponse(
+        const combinedGuidance = conversation.userGuidance
+          ? `${conversation.userGuidance}\n\nCorrections: ${messageText}`
+          : messageText;
+
+        const result = await processReceipt(
           conversation.pendingImages,
           null,
-          conversation.userGuidance,
-          messageText
+          combinedGuidance
         );
 
         if (result.error) {

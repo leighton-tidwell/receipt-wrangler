@@ -128,16 +128,6 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (result.needsClarification && result.clarificationQuestion) {
-      // For now, show the question as an error and let them add it to instructions
-      res.send(
-        processingErrorPage(
-          `Need clarification: ${result.clarificationQuestion}. Please add this info to your instructions and try again.`
-        )
-      );
-      return;
-    }
-
     if (result.parsedReceipt) {
       // Encode image data with mime types for reprocessing
       const encodedImages = imageData.map((data, i) => `${mimeTypes[i]}|${data}`);

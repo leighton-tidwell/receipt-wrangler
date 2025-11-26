@@ -1,7 +1,6 @@
 export type ConversationState =
   | "IDLE"
   | "PROCESSING"
-  | "AWAITING_ANSWER"
   | "AWAITING_CONFIRM";
 
 export interface ReceiptItem {
