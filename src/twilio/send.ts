@@ -12,11 +12,11 @@ export async function sendSms(to: string, body: string): Promise<void> {
 }
 
 export async function sendToWife(body: string): Promise<void> {
-  console.log(`[SMS -> Wife] ${body.substring(0, 50)}...`);
+  console.log(`[SMS -> Wife] ${body}`);
   await sendSms(config.wifePhoneNumber, body);
 }
 
 export async function sendToHusband(body: string): Promise<void> {
-  console.log(`[SMS -> Husband] ${body.substring(0, 50)}...`);
+  console.log(`[SMS -> Husband] ${body}`);
   await sendSms(config.husbandPhoneNumber, body);
 }
