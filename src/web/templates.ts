@@ -1,5 +1,27 @@
 import type { ParsedReceipt, CategoryBreakdown } from "../state/conversation.js";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function getCategoryLabel(key: string): string {
+  const labels: Record<string, string> = {
+    groceries: "GROCERIES",
+    babySupplies: "BABY SUPPLIES",
+    bathroomSupplies: "BATHROOM SUPPLIES",
+    houseSupplies: "HOUSE SUPPLIES",
+    pharmacy: "PHARMACY",
+    charity: "CHARITY",
+  };
+  if (labels[key]) return labels[key];
+  return key.replace(/([A-Z])/g, " $1").trim().toUpperCase();
+}
+
 const STYLES = `
   * { box-sizing: border-box; }
   body {
@@ -156,18 +178,9 @@ export function reviewPage(
   receiptText?: string,
   error?: string
 ): string {
-  const categories = [
-    { key: "groceries", name: "GROCERIES" },
-    { key: "babySupplies", name: "BABY SUPPLIES" },
-    { key: "bathroomSupplies", name: "BATHROOM SUPPLIES" },
-    { key: "houseSupplies", name: "HOUSE SUPPLIES" },
-    { key: "charity", name: "CHARITY" },
-  ];
-
-  const categoryHtml = categories
-    .map(({ key, name }) =>
-      renderCategory(name, receipt.categories[key as keyof typeof receipt.categories])
-    )
+  // Render all categories from the receipt (handles default + custom)
+  const categoryHtml = Object.entries(receipt.categories)
+    .map(([key, breakdown]) => renderCategory(getCategoryLabel(key), breakdown))
     .filter(Boolean)
     .join("");
 
@@ -208,10 +221,10 @@ export function reviewPage(
   <div class="card">
     <h2 style="margin-top: 0;">Make Corrections</h2>
     <form method="POST" action="/upload/reprocess">
-      ${imageData.map((img, i) => `<input type="hidden" name="imageData${i}" value="${img}">`).join("")}
+      ${imageData.map((img, i) => `<input type="hidden" name="imageData${i}" value="${escapeHtml(img)}">`).join("")}
       <input type="hidden" name="imageCount" value="${imageData.length}">
-      <input type="hidden" name="previousInstructions" value="${previousInstructions || ""}">
-      <input type="hidden" name="receiptText" value="${receiptText || ""}">
+      <input type="hidden" name="previousInstructions" value="${escapeHtml(previousInstructions || "")}">
+      <input type="hidden" name="receiptText" value="${escapeHtml(receiptText || "")}">
 
       <label for="corrections">Any corrections?</label>
       <textarea id="corrections" name="corrections" placeholder="e.g., Move apples to baby supplies, the soap should be bathroom supplies"></textarea>
@@ -224,7 +237,7 @@ export function reviewPage(
     <h2 style="margin-top: 0;">Confirm &amp; Send</h2>
     <p>This will send the summary to the budget.</p>
     <form method="POST" action="/upload/confirm">
-      <input type="hidden" name="receipt" value='${JSON.stringify(receipt)}'>
+      <input type="hidden" name="receipt" value="${escapeHtml(JSON.stringify(receipt))}">
 
       <button type="submit">Confirm &amp; Send</button>
     </form>
@@ -251,13 +264,19 @@ export function donePage(receipt: ParsedReceipt): string {
     babySupplies: "Baby Supplies",
     bathroomSupplies: "Bathroom Supplies",
     houseSupplies: "House Supplies",
+    pharmacy: "Pharmacy",
     charity: "Charity",
   };
 
-  for (const key of Object.keys(receipt.categories) as Array<keyof typeof receipt.categories>) {
-    const breakdown = receipt.categories[key];
+  function getDonePageLabel(key: string): string {
+    if (categoryLabels[key]) return categoryLabels[key];
+    // Convert camelCase to Title Case
+    return key.replace(/([A-Z])/g, " $1").trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  for (const [key, breakdown] of Object.entries(receipt.categories)) {
     if (breakdown.items.length === 0) continue;
-    const label = categoryLabels[key];
+    const label = getDonePageLabel(key);
     if (breakdown.tax > 0) {
       summaryLines.push(`${label}: ${formatMoney(breakdown.subtotal)} (+${formatMoney(breakdown.tax)} tax)`);
     } else {

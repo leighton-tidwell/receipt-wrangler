@@ -5,8 +5,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   babySupplies: "BABY SUPPLIES",
   bathroomSupplies: "BATHROOM SUPPLIES",
   houseSupplies: "HOUSE SUPPLIES",
+  pharmacy: "PHARMACY",
   charity: "CHARITY",
 };
+
+function getCategoryLabel(key: string): string {
+  if (CATEGORY_LABELS[key]) return CATEGORY_LABELS[key];
+  // Convert camelCase to TITLE CASE for custom categories
+  return key.replace(/([A-Z])/g, " $1").trim().toUpperCase();
+}
 
 function formatMoney(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
@@ -38,13 +45,8 @@ function formatCategoryDetail(
 export function formatConfirmationMessage(receipt: ParsedReceipt): string {
   const lines: string[] = ["Here's the breakdown - reply YES to confirm:", ""];
 
-  const categoryKeys = Object.keys(receipt.categories) as Array<
-    keyof typeof receipt.categories
-  >;
-
-  for (const key of categoryKeys) {
-    const breakdown = receipt.categories[key];
-    const label = CATEGORY_LABELS[key];
+  for (const [key, breakdown] of Object.entries(receipt.categories)) {
+    const label = getCategoryLabel(key);
     const formatted = formatCategoryDetail(label, breakdown);
     if (formatted) {
       lines.push(formatted);
@@ -55,9 +57,9 @@ export function formatConfirmationMessage(receipt: ParsedReceipt): string {
   // Calculate totals
   let subtotal = 0;
   let totalTax = 0;
-  for (const key of categoryKeys) {
-    subtotal += receipt.categories[key].subtotal;
-    totalTax += receipt.categories[key].tax;
+  for (const breakdown of Object.values(receipt.categories)) {
+    subtotal += breakdown.subtotal;
+    totalTax += breakdown.tax;
   }
   const total = subtotal + totalTax;
 
@@ -81,15 +83,10 @@ export function formatConfirmationMessage(receipt: ParsedReceipt): string {
 export function formatFinalSummary(receipt: ParsedReceipt): string {
   const lines: string[] = [`${receipt.storeName} - ${receipt.date}`, ""];
 
-  const categoryKeys = Object.keys(receipt.categories) as Array<
-    keyof typeof receipt.categories
-  >;
-
-  for (const key of categoryKeys) {
-    const breakdown = receipt.categories[key];
+  for (const [key, breakdown] of Object.entries(receipt.categories)) {
     if (breakdown.items.length === 0) continue;
 
-    const label = CATEGORY_LABELS[key];
+    const label = getCategoryLabel(key);
     if (breakdown.tax > 0) {
       lines.push(
         `${label}: ${formatMoney(breakdown.subtotal)} (+${formatMoney(breakdown.tax)} tax)`
@@ -101,8 +98,8 @@ export function formatFinalSummary(receipt: ParsedReceipt): string {
 
   // Calculate total
   let total = 0;
-  for (const key of categoryKeys) {
-    total += receipt.categories[key].total;
+  for (const breakdown of Object.values(receipt.categories)) {
+    total += breakdown.total;
   }
 
   lines.push("");

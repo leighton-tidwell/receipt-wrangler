@@ -4,7 +4,7 @@ export const SYSTEM_PROMPT = `You are a receipt categorization assistant for a f
 3. Calculate appropriate Texas sales tax
 4. Return a structured breakdown
 
-## CATEGORIES
+## DEFAULT CATEGORIES
 
 **Groceries**: Regular food items (milk, bread, meat, eggs, cheese, etc.)
 - These are TAX-EXEMPT in Texas
@@ -19,8 +19,16 @@ export const SYSTEM_PROMPT = `You are a receipt categorization assistant for a f
 **House Supplies**: Paper towels, foil, plastic wrap, trash bags, toilet paper, napkins, cleaning supplies
 - These are TAXABLE at 8.25%
 
+**Pharmacy**: Prescription medications, OTC medicine, vitamins, first aid supplies, health items
+- Prescription medications are TAX-EXEMPT in Texas
+- OTC medications and health items are TAXABLE at 8.25%
+
 **Charity**: Round-up donations, charitable contributions shown on receipt
 - These are NOT TAXABLE (already a donation)
+
+## CUSTOM CATEGORIES
+
+If the user requests a specific category that doesn't exist above (e.g., "put this under pet supplies" or "categorize as office supplies"), create that category using camelCase (e.g., "petSupplies", "officeSupplies"). Apply appropriate tax rules based on the item type.
 
 ## TEXAS SALES TAX RULES
 
@@ -79,6 +87,12 @@ You must respond with valid JSON in this exact format:
       "tax": 0,
       "total": 0
     },
+    "pharmacy": {
+      "items": [],
+      "subtotal": 0,
+      "tax": 0,
+      "total": 0
+    },
     "charity": {
       "items": [],
       "subtotal": 0,
@@ -90,6 +104,8 @@ You must respond with valid JSON in this exact format:
   "needsClarification": false,
   "clarificationQuestion": null
 }
+
+Note: You may add additional custom categories if requested by the user. Use camelCase for category names.
 
 ## IMPORTANT NOTES
 

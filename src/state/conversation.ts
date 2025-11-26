@@ -25,7 +25,9 @@ export interface ParsedReceipt {
     babySupplies: CategoryBreakdown;
     bathroomSupplies: CategoryBreakdown;
     houseSupplies: CategoryBreakdown;
+    pharmacy: CategoryBreakdown;
     charity: CategoryBreakdown;
+    [key: string]: CategoryBreakdown; // Allow custom categories
   };
   originalTotal: number;
 }
