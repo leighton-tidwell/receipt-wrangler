@@ -3,6 +3,7 @@ import preact from '@preact/preset-vite';
 import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => ({
+  root: 'client',
   plugins: [
     preact(
       mode === 'development'
@@ -28,13 +29,9 @@ export default defineConfig(({ mode }) => ({
   },
   resolve: {
     alias: {
-      '@/shared': resolve(__dirname, '../shared'),
-      '@': resolve(__dirname, './src'),
-      // Use root preact to match SSR (avoid multiple Preact instances)
-      preact: resolve(__dirname, '../node_modules/preact'),
-      'preact/hooks': resolve(__dirname, '../node_modules/preact/hooks'),
-      'preact/jsx-runtime': resolve(__dirname, '../node_modules/preact/jsx-runtime'),
-      'preact/jsx-dev-runtime': resolve(__dirname, '../node_modules/preact/jsx-runtime'),
+      '@/shared': resolve(__dirname, './shared'),
+      '@/client': resolve(__dirname, './client/src'),
+      '@/server': resolve(__dirname, './server'),
     },
   },
   server: {

@@ -1,10 +1,10 @@
 import { ToolLoopAgent as Agent, Output, stepCountIs } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { config } from '@/config.js';
-import { SYSTEM_PROMPT } from '@/agent/prompts.js';
-import { verifyTotals } from '@/agent/tools.js';
-import type { ParsedReceipt } from '@/state/conversation.js';
+import { config } from '@/server/config.js';
+import { SYSTEM_PROMPT } from '@/server/agent/prompts.js';
+import { verifyTotals } from '@/server/agent/tools.js';
+import type { ParsedReceipt } from '@/server/state/conversation.js';
 
 const receiptItemSchema = z.object({
   name: z.string(),

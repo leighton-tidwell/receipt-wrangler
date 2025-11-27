@@ -1,8 +1,8 @@
-import type { ParsedReceipt } from '@/state/conversation.js';
+import type { ParsedReceipt } from '@/server/state/conversation.js';
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { renderAppToString } from '@/web/ssr.js';
+import { renderAppToString } from '@/server/web/ssr.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

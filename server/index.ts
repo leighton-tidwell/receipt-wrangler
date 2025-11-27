@@ -2,8 +2,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { config } from '@/config.js';
-import { handleIncomingSms } from '@/twilio/webhook.js';
+import { config } from '@/server/config.js';
+import { handleIncomingSms } from '@/server/twilio/webhook.js';
 import {
   getUploadPage,
   postAuth,
@@ -11,7 +11,7 @@ import {
   postReprocess,
   postConfirm,
   uploadMiddleware,
-} from '@/web/upload.js';
+} from '@/server/web/upload.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();

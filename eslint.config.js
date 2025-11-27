@@ -32,14 +32,14 @@ export default defineConfig(
     },
   },
   {
-    files: ['src/**/*.ts', 'src/**/*.tsx'],
+    files: ['server/**/*.ts', 'server/**/*.tsx'],
     rules: {
       'no-relative-import-paths/no-relative-import-paths': [
         'error',
         {
           allowSameFolder: false,
-          rootDir: 'src',
-          prefix: '@',
+          rootDir: 'server',
+          prefix: '@/server',
         },
       ],
     },
@@ -65,7 +65,7 @@ export default defineConfig(
         {
           allowSameFolder: false,
           rootDir: 'client/src',
-          prefix: '@',
+          prefix: '@/client',
         },
       ],
     },
