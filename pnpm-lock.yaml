@@ -87,6 +87,9 @@ importers:
       eslint-plugin-no-relative-import-paths:
         specifier: ^1.6.1
         version: 1.6.1
+      eslint-plugin-simple-import-sort:
+        specifier: ^12.1.1
+        version: 12.1.1(eslint@9.39.1(jiti@1.21.7))
       globals:
         specifier: ^16.5.0
         version: 16.5.0
@@ -1258,6 +1261,11 @@ packages:
 
   eslint-plugin-no-relative-import-paths@1.6.1:
     resolution: {integrity: sha512-YZNeOnsOrJcwhFw0X29MXjIzu2P/f5X2BZDPWw1R3VUYBRFxNIh77lyoL/XrMU9ewZNQPcEvAgL/cBOT1P330A==}
+
+  eslint-plugin-simple-import-sort@12.1.1:
+    resolution: {integrity: sha512-6nuzu4xwQtE3332Uz0to+TxDQYRLTKRESSc2hefVT48Zc8JthmN23Gx9lnYhu0FtkRSL1oxny3kJ2aveVhmOVA==}
+    peerDependencies:
+      eslint: '>=5.0.0'
 
   eslint-scope@8.4.0:
     resolution: {integrity: sha512-sNXOfKCn74rt8RICKMvJS7XKV/Xk9kA7DyJr8mJik3S7Cwgy3qlkkmyS2uQB3jiJg6VNdZd/pDBJu0nvG2NlTg==}
@@ -3380,6 +3388,10 @@ snapshots:
   escape-string-regexp@4.0.0: {}
 
   eslint-plugin-no-relative-import-paths@1.6.1: {}
+
+  eslint-plugin-simple-import-sort@12.1.1(eslint@9.39.1(jiti@1.21.7)):
+    dependencies:
+      eslint: 9.39.1(jiti@1.21.7)
 
   eslint-scope@8.4.0:
     dependencies:

@@ -1,9 +1,10 @@
 // @ts-check
 import eslint from '@eslint/js';
 import { defineConfig } from 'eslint/config';
-import tseslint from 'typescript-eslint';
-import globals from 'globals';
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   {
@@ -14,6 +15,7 @@ export default defineConfig(
   {
     plugins: {
       'no-relative-import-paths': noRelativeImportPaths,
+      'simple-import-sort': simpleImportSort,
     },
     languageOptions: {
       globals: {
@@ -29,6 +31,8 @@ export default defineConfig(
           varsIgnorePattern: '^_',
         },
       ],
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
     },
   },
   {

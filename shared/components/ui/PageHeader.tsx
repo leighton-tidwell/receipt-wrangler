@@ -1,5 +1,6 @@
-import type { ComponentChildren } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
+import type { ComponentChildren } from 'preact';
+
 import { Icon, type IconName } from '@/shared/components/ui/Icon';
 
 const iconContainerVariants = cva('mx-auto mb-4 flex items-center justify-center', {

@@ -1,5 +1,6 @@
-import type { ComponentChildren } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
+import type { ComponentChildren } from 'preact';
+
 import { cn } from '@/shared/lib/cn';
 
 const layoutVariants = cva(

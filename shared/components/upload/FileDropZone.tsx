@@ -1,6 +1,7 @@
 import { useRef } from 'preact/hooks';
-import { cn } from '@/shared/lib/cn';
+
 import { Icon } from '@/shared/components/ui/Icon';
+import { cn } from '@/shared/lib/cn';
 
 interface FileDropZoneProps {
   files: File[];

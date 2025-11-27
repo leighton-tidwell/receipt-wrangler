@@ -1,4 +1,4 @@
-import type { ParsedReceipt, CategoryBreakdown } from '@/server/state/conversation.js';
+import type { CategoryBreakdown, ParsedReceipt } from '@/server/state/conversation.js';
 
 const CATEGORY_LABELS: Record<string, string> = {
   groceries: 'GROCERIES',

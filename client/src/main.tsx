@@ -1,7 +1,9 @@
+import '@/client/index.css';
+
 import { hydrate, render } from 'preact';
+
 import { App } from '@/shared/App';
 import type { PageData } from '@/shared/types';
-import '@/client/index.css';
 
 declare global {
   interface Window {

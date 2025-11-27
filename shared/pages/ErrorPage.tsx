@@ -1,8 +1,8 @@
-import { PageLayout } from '@/shared/components/ui/PageLayout';
-import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Card } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
+import { Card } from '@/shared/components/ui/Card';
 import { Icon } from '@/shared/components/ui/Icon';
+import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { PageLayout } from '@/shared/components/ui/PageLayout';
 
 interface ErrorPageProps {
   error: string;

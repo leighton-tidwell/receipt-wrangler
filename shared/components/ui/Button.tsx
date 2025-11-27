@@ -1,5 +1,6 @@
-import type { ButtonHTMLAttributes, ComponentChildren } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
+import type { ButtonHTMLAttributes, ComponentChildren } from 'preact';
+
 import { cn } from '@/shared/lib/cn';
 
 const buttonVariants = cva(

@@ -1,12 +1,13 @@
 import { useState } from 'preact/hooks';
-import { PageLayout } from '@/shared/components/ui/PageLayout';
-import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { Card, CardHeader, CardFooter } from '@/shared/components/ui/Card';
-import { Button } from '@/shared/components/ui/Button';
-import { Icon } from '@/shared/components/ui/Icon';
+
 import { CategoryBreakdownList } from '@/shared/components/receipt/CategoryBreakdownList';
-import { formatMoney, getCategoryLabel } from '@/shared/utils';
+import { Button } from '@/shared/components/ui/Button';
+import { Card, CardFooter, CardHeader } from '@/shared/components/ui/Card';
+import { Icon } from '@/shared/components/ui/Icon';
+import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { PageLayout } from '@/shared/components/ui/PageLayout';
 import type { ParsedReceipt } from '@/shared/types';
+import { formatMoney, getCategoryLabel } from '@/shared/utils';
 
 interface DonePageProps {
   receipt: ParsedReceipt;
