@@ -46,6 +46,6 @@ app.listen(config.port, () => {
   console.log(`Receipt Wrangler running on port ${config.port}`);
   console.log(`Webhook URL: http://localhost:${config.port}/webhook/sms`);
   console.log(`Upload URL: http://localhost:${config.port}/upload`);
-  console.log(`Listening for messages from: ${config.wifePhoneNumber}`);
-  console.log(`Will send summaries to: ${config.husbandPhoneNumber}`);
+  console.log(`Listening for messages from: ${config.senderPhoneNumber}`);
+  console.log(`Will send summaries to: ${config.receiverPhoneNumber}`);
 });

@@ -5,15 +5,15 @@ A SMS-based receipt categorization bot that helps split grocery/store receipts i
 ## Overview
 
 **Flow:**
-1. Wife texts receipt (photo(s) or pasted text) + optional guidance to Twilio number
+1. Sender texts receipt (photo(s) or pasted text) + optional guidance to Twilio number
 2. Bot processes receipt using OpenAI vision/text capabilities
-3. Bot asks clarifying questions if needed (replies to wife)
-4. Bot sends categorized breakdown to wife for confirmation
-5. Wife confirms ("yes", "looks good", etc.)
-6. Bot sends final concise summary to husband's phone number
+3. Bot asks clarifying questions if needed (replies to sender)
+4. Bot sends categorized breakdown to sender for confirmation
+5. Sender confirms ("yes", "looks good", etc.)
+6. Bot sends final concise summary to receiver's phone number
 
 **Constraints:**
-- Only responds to wife's phone number (all other numbers ignored)
+- Only responds to sender's phone number (all other numbers ignored)
 - One receipt at a time - pushes back if new receipt sent before confirmation
 - No persistence/database - SMS threads serve as history
 
@@ -59,8 +59,8 @@ TWILIO_AUTH_TOKEN=your_auth_token
 TWILIO_PHONE_NUMBER=+1234567890  # The Twilio number that receives texts
 
 # Phone Numbers
-WIFE_PHONE_NUMBER=+1234567890    # Only respond to this number
-HUSBAND_PHONE_NUMBER=+1234567890 # Send final summaries here
+SENDER_PHONE_NUMBER=+1234567890    # Only respond to this number
+RECEIVER_PHONE_NUMBER=+1234567890  # Send final summaries here
 
 # OpenAI
 OPENAI_API_KEY=your_openai_api_key
@@ -76,7 +76,7 @@ NODE_ENV=development
 
 ```
 ┌─────────────┐     SMS/MMS      ┌─────────────┐
-│   Wife's    │ ───────────────> │   Twilio    │
+│  Sender's   │ ───────────────> │   Twilio    │
 │   Phone     │ <─────────────── │   Number    │
 └─────────────┘                  └──────┬──────┘
                                         │ webhook
@@ -102,7 +102,7 @@ NODE_ENV=development
                                         │
                                         v
                                  ┌─────────────┐     SMS
-                                 │  Twilio     │ ──────────> Husband's Phone
+                                 │  Twilio     │ ──────────> Receiver's Phone
                                  │  (outbound) │             (final summary)
                                  └─────────────┘
 ```
@@ -127,16 +127,16 @@ NODE_ENV=development
        │
        v
 ┌──────────────────┐
-│ AWAITING_CONFIRM │  (sent breakdown to wife, waiting for "yes")
+│ AWAITING_CONFIRM │  (sent breakdown to sender, waiting for "yes")
 └──────┬───────────┘
        │ receives confirmation
        v
 ┌──────────────┐
-│ SEND_SUMMARY │  (sends to husband, returns to IDLE)
+│ SEND_SUMMARY │  (sends to receiver, returns to IDLE)
 └──────────────┘
 ```
 
-**Note:** State will be stored in-memory per phone number. Since only wife's number is allowed and one receipt at a time, a simple object suffices.
+**Note:** State will be stored in-memory per phone number. Since only sender's number is allowed and one receipt at a time, a simple object suffices.
 
 ---
 
@@ -202,7 +202,7 @@ receipt-wrangler/
 - [ ] Handle multi-image receipts (combine before processing)
 - [ ] Implement clarifying questions flow
 - [ ] Implement confirmation flow
-- [ ] Implement final summary sending to husband
+- [ ] Implement final summary sending to receiver
 
 ### Phase 5: Testing & Polish
 - [ ] Test with real receipts
@@ -215,7 +215,7 @@ receipt-wrangler/
 
 ## Message Formats
 
-### Final Summary (sent to husband)
+### Final Summary (sent to receiver)
 ```
 H-E-B - Nov 26, 2025
 
@@ -227,7 +227,7 @@ Bathroom Supplies: $6.99 (+$0.58 tax)
 Total: $74.77
 ```
 
-### Confirmation (sent to wife)
+### Confirmation (sent to sender)
 ```
 Here's the breakdown - reply YES to confirm:
 

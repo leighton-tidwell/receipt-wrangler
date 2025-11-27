@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { config } from "../config.js";
-import { sendToSender, sendToHusband } from "./send.js";
+import { sendToSender, sendToReceiver } from "./send.js";
 import {
   getConversation,
   updateConversation,
@@ -85,8 +85,8 @@ export async function handleIncomingSms(
 
   console.log(`[SMS <- ${from}] "${messageText}" (${mediaUrls.length} images)`);
 
-  // Only respond to authorized numbers (wife or husband)
-  const authorizedNumbers = [config.wifePhoneNumber, config.husbandPhoneNumber];
+  // Only respond to authorized numbers (sender or receiver)
+  const authorizedNumbers = [config.senderPhoneNumber, config.receiverPhoneNumber];
   if (!authorizedNumbers.includes(from)) {
     console.log(`Ignoring message from unauthorized number: ${from}`);
     res.status(200).send("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>");
@@ -168,7 +168,7 @@ export async function handleIncomingSms(
         if (isConfirmation(messageText)) {
           if (conversation.parsedReceipt) {
             const summary = formatFinalSummary(conversation.parsedReceipt);
-            await sendToHusband(summary);
+            await sendToReceiver(summary);
             await sendToSender(from, "Done! Sent the breakdown to the budget.");
           }
           resetConversation();

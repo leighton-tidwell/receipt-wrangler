@@ -15,8 +15,8 @@ export const config = {
   twilioPhoneNumber: requireEnv("TWILIO_PHONE_NUMBER"),
 
   // Phone numbers
-  wifePhoneNumber: requireEnv("WIFE_PHONE_NUMBER"),
-  husbandPhoneNumber: requireEnv("HUSBAND_PHONE_NUMBER"),
+  senderPhoneNumber: requireEnv("SENDER_PHONE_NUMBER"),
+  receiverPhoneNumber: requireEnv("RECEIVER_PHONE_NUMBER"),
 
   // OpenAI
   openaiApiKey: requireEnv("OPENAI_API_KEY"),

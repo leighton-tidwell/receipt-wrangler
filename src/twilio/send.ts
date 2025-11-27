@@ -16,7 +16,7 @@ export async function sendToSender(to: string, body: string): Promise<void> {
   await sendSms(to, body);
 }
 
-export async function sendToHusband(body: string): Promise<void> {
-  console.log(`[SMS -> Husband] ${body}`);
-  await sendSms(config.husbandPhoneNumber, body);
+export async function sendToReceiver(body: string): Promise<void> {
+  console.log(`[SMS -> Receiver] ${body}`);
+  await sendSms(config.receiverPhoneNumber, body);
 }
