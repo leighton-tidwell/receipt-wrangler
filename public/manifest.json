@@ -2,7 +2,7 @@
   "name": "Receipt Wrangler",
   "short_name": "Receipts",
   "description": "SMS-based receipt categorization for family budgeting",
-  "start_url": "/",
+  "start_url": "/upload",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#22c55e",
