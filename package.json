@@ -11,7 +11,13 @@
     "build": "pnpm build:client",
     "build:client": "cd client && pnpm install && pnpm build",
     "typecheck": "tsc --noEmit",
-    "start": "NODE_ENV=production tsx src/index.ts"
+    "start": "NODE_ENV=production tsx src/index.ts",
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,md,html}": "prettier --write"
   },
   "keywords": [
     "twilio",
@@ -28,6 +34,9 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
     "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.6.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {
