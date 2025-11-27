@@ -2,6 +2,7 @@ export interface ReceiptItem {
   name: string;
   price: number;
   taxable: boolean;
+  unclear?: boolean;
 }
 
 export interface CategoryBreakdown {
@@ -17,6 +18,8 @@ export interface ParsedReceipt {
   date: string;
   categories: Record<string, CategoryBreakdown>;
   originalTotal: number;
+  hasUnclearItems?: boolean;
+  hasMissingItems?: boolean;
 }
 
 export interface PageData {

@@ -7,6 +7,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   houseSupplies: "HOUSE SUPPLIES",
   pharmacy: "PHARMACY",
   charity: "CHARITY",
+  unknown: "UNKNOWN",
 };
 
 function getCategoryLabel(key: string): string {

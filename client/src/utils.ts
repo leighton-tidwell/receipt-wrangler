@@ -10,6 +10,7 @@ export function getCategoryLabel(key: string): string {
     houseSupplies: "House Supplies",
     pharmacy: "Pharmacy",
     charity: "Charity",
+    unknown: "Unknown",
   };
   if (labels[key]) return labels[key];
   return key
