@@ -48,7 +48,7 @@ export function UploadPage({ error }: UploadPageProps) {
       />
 
       {error && (
-        <Alert variant="error" class="mb-6 animate-fade-in">
+        <Alert variant="error" class="animate-fade-in mb-6">
           {error}
         </Alert>
       )}
@@ -61,32 +61,32 @@ export function UploadPage({ error }: UploadPageProps) {
         class="space-y-6"
       >
         <Card class="animate-slide-up">
-          <label class="block text-sm font-medium text-slate-700 mb-3">Upload Type</label>
+          <label class="mb-3 block text-sm font-medium text-slate-700">Upload Type</label>
           <div class="flex gap-2">
             <button
               type="button"
               onClick={() => setMode('image')}
               class={cn(
-                'flex-1 py-1.5 px-3 rounded-md font-medium text-sm transition-all',
+                'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
                 mode === 'image'
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               )}
             >
-              <Icon name="image" class="inline-block w-4 h-4 mr-1.5 -mt-0.5" />
+              <Icon name="image" class="-mt-0.5 mr-1.5 inline-block h-4 w-4" />
               Image
             </button>
             <button
               type="button"
               onClick={() => setMode('receipt')}
               class={cn(
-                'flex-1 py-1.5 px-3 rounded-md font-medium text-sm transition-all',
+                'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
                 mode === 'receipt'
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               )}
             >
-              <Icon name="receipt" class="inline-block w-4 h-4 mr-1.5 -mt-0.5" />
+              <Icon name="receipt" class="-mt-0.5 mr-1.5 inline-block h-4 w-4" />
               Text
             </button>
           </div>
@@ -94,7 +94,7 @@ export function UploadPage({ error }: UploadPageProps) {
 
         {mode === 'image' ? (
           <Card class="animate-slide-up stagger-1">
-            <label class="block text-sm font-medium text-slate-700 mb-2">Receipt Image(s)</label>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Receipt Image(s)</label>
             <FileDropZone
               files={selectedFiles}
               onFilesChange={setSelectedFiles}

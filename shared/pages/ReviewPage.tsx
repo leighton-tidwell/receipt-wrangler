@@ -57,21 +57,21 @@ export function ReviewPage({
         />
       )}
 
-      <div class="flex items-center gap-3 mb-6 animate-fade-in">
-        <a href="/upload" class="p-2 -ml-2 text-slate-400 hover:text-slate-600 transition-colors">
-          <Icon name="chevronLeft" class="w-6 h-6" />
+      <div class="animate-fade-in mb-6 flex items-center gap-3">
+        <a href="/upload" class="-ml-2 p-2 text-slate-400 transition-colors hover:text-slate-600">
+          <Icon name="chevronLeft" class="h-6 w-6" />
         </a>
         <h1 class="text-xl font-bold text-slate-800">Review Breakdown</h1>
       </div>
 
       {error && (
-        <Alert variant="error" class="mb-6 animate-fade-in">
+        <Alert variant="error" class="animate-fade-in mb-6">
           {error}
         </Alert>
       )}
 
       {(receipt.hasUnclearItems || receipt.hasMissingItems) && (
-        <Alert variant="warning" class="mb-6 animate-fade-in">
+        <Alert variant="warning" class="animate-fade-in mb-6">
           {receipt.hasUnclearItems && receipt.hasMissingItems ? (
             <p>
               <strong>Attention needed:</strong> Some items couldn't be read clearly, and there

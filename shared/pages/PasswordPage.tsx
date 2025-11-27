@@ -32,7 +32,7 @@ export function PasswordPage({ error }: PasswordPageProps) {
       <PageHeader icon="receipt" title="Receipt Wrangler" subtitle="Enter password to continue" />
 
       {error && (
-        <Alert variant="error" class="mb-6 animate-fade-in">
+        <Alert variant="error" class="animate-fade-in mb-6">
           {error}
         </Alert>
       )}

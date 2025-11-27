@@ -65,7 +65,7 @@ export function FileDropZone({
     <>
       <div
         class={cn(
-          'relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer',
+          'relative cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-all',
           dragActive
             ? 'border-primary-500 bg-primary-50'
             : 'border-slate-200 hover:border-slate-300'
@@ -85,18 +85,18 @@ export function FileDropZone({
           onChange={handleFileChange}
           class="hidden"
         />
-        <Icon name="image" class="w-10 h-10 text-slate-300 mx-auto mb-3" />
-        <p class="text-slate-500 text-sm">Tap to select or drag images here</p>
-        <p class="text-slate-400 text-xs mt-1">PNG, JPG up to 10MB each</p>
+        <Icon name="image" class="mx-auto mb-3 h-10 w-10 text-slate-300" />
+        <p class="text-sm text-slate-500">Tap to select or drag images here</p>
+        <p class="mt-1 text-xs text-slate-400">PNG, JPG up to 10MB each</p>
       </div>
 
       {files.length > 0 && (
         <div class="mt-4 space-y-2">
           {files.map((file, i) => (
-            <div key={i} class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <div class="flex items-center gap-3 min-w-0">
-                <Icon name="image" class="w-5 h-5 text-primary-500 flex-shrink-0" />
-                <span class="text-sm text-slate-600 truncate">{file.name}</span>
+            <div key={i} class="flex items-center justify-between rounded-lg bg-slate-50 p-3">
+              <div class="flex min-w-0 items-center gap-3">
+                <Icon name="image" class="h-5 w-5 flex-shrink-0 text-primary-500" />
+                <span class="truncate text-sm text-slate-600">{file.name}</span>
               </div>
               <button
                 type="button"
@@ -104,7 +104,7 @@ export function FileDropZone({
                   e.stopPropagation();
                   removeFile(i);
                 }}
-                class="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                class="p-1 text-slate-400 transition-colors hover:text-red-500"
               >
                 <Icon name="x" />
               </button>

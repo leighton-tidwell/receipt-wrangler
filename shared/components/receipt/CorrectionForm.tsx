@@ -22,8 +22,8 @@ export function CorrectionForm({
   isProcessing,
 }: CorrectionFormProps) {
   return (
-    <Card padding="md" class="mb-4 animate-slide-up">
-      <h3 class="font-semibold text-slate-700 mb-3">Need corrections?</h3>
+    <Card padding="md" class="animate-slide-up mb-4">
+      <h3 class="mb-3 font-semibold text-slate-700">Need corrections?</h3>
       <form method="POST" action="/upload/reprocess" onSubmit={onSubmit}>
         {imageData.map((img, i) => (
           <input key={i} type="hidden" name={`imageData${i}`} value={img} />

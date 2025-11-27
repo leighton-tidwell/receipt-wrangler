@@ -35,9 +35,9 @@ export function TextArea({ label, optional, error, class: className, ...props }:
   return (
     <div class="w-full">
       {label && (
-        <label class="block text-sm font-medium text-slate-700 mb-2">
+        <label class="mb-2 block text-sm font-medium text-slate-700">
           {label}
-          {optional && <span class="text-slate-400 font-normal"> (optional)</span>}
+          {optional && <span class="font-normal text-slate-400"> (optional)</span>}
         </label>
       )}
       <textarea class={cn(textareaVariants({ hasError: !!error }), className)} {...props} />

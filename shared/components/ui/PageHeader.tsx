@@ -38,14 +38,14 @@ type PageHeaderProps = VariantProps<typeof iconContainerVariants> & {
 
 export function PageHeader({ icon, iconVariant, title, subtitle, children }: PageHeaderProps) {
   return (
-    <div class="text-center mb-8 animate-fade-in">
+    <div class="animate-fade-in mb-8 text-center">
       {icon && (
         <div class={iconContainerVariants({ iconVariant })}>
           <Icon name={icon} class={iconColorVariants({ iconVariant })} />
         </div>
       )}
       <h1 class="text-2xl font-bold text-slate-800">{title}</h1>
-      {subtitle && <p class="text-slate-500 mt-1">{subtitle}</p>}
+      {subtitle && <p class="mt-1 text-slate-500">{subtitle}</p>}
       {children}
     </div>
   );

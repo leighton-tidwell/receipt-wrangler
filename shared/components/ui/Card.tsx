@@ -33,7 +33,7 @@ interface CardHeaderProps {
 
 export function CardHeader({ children, class: className }: CardHeaderProps) {
   return (
-    <div class={cn('px-5 py-4 bg-slate-50 border-b border-slate-200', className)}>{children}</div>
+    <div class={cn('border-b border-slate-200 bg-slate-50 px-5 py-4', className)}>{children}</div>
   );
 }
 
@@ -53,6 +53,6 @@ interface CardFooterProps {
 
 export function CardFooter({ children, class: className }: CardFooterProps) {
   return (
-    <div class={cn('px-5 py-4 bg-slate-50 border-t border-slate-200', className)}>{children}</div>
+    <div class={cn('border-t border-slate-200 bg-slate-50 px-5 py-4', className)}>{children}</div>
   );
 }

@@ -66,7 +66,7 @@ export function DonePage({ receipt }: DonePageProps) {
         subtitle="Receipt sent to budget"
       />
 
-      <Card padding="none" class="mb-4 animate-slide-up overflow-hidden">
+      <Card padding="none" class="animate-slide-up mb-4 overflow-hidden">
         <CardHeader>
           <div class="flex items-center justify-between">
             <h2 class="font-semibold text-slate-800">{receipt.storeName}</h2>
@@ -77,12 +77,12 @@ export function DonePage({ receipt }: DonePageProps) {
         <CardFooter>
           <div class="flex items-center justify-between">
             <span class="font-semibold text-slate-800">Total</span>
-            <span class="font-bold text-slate-800 text-xl">{formatMoney(total)}</span>
+            <span class="text-xl font-bold text-slate-800">{formatMoney(total)}</span>
           </div>
         </CardFooter>
       </Card>
 
-      <div class="flex gap-3 animate-slide-up stagger-1">
+      <div class="animate-slide-up stagger-1 flex gap-3">
         <Button
           variant="outline"
           size="md"

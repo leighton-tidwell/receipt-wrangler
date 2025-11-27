@@ -8,9 +8,9 @@ export function LoadingOverlay({
   submessage = 'Please wait',
 }: LoadingOverlayProps) {
   return (
-    <div class="fixed inset-0 bg-white/80 loading-overlay z-50 flex items-center justify-center">
+    <div class="loading-overlay fixed inset-0 z-50 flex items-center justify-center bg-white/80">
       <div class="text-center">
-        <div class="w-16 h-16 mx-auto mb-4">
+        <div class="mx-auto mb-4 h-16 w-16">
           <svg class="animate-spin text-primary-500" viewBox="0 0 24 24" fill="none">
             <circle
               class="opacity-25"
@@ -27,8 +27,8 @@ export function LoadingOverlay({
             />
           </svg>
         </div>
-        <p class="text-slate-600 font-medium">{message}</p>
-        <p class="text-slate-400 text-sm mt-1">{submessage}</p>
+        <p class="font-medium text-slate-600">{message}</p>
+        <p class="mt-1 text-sm text-slate-400">{submessage}</p>
       </div>
     </div>
   );

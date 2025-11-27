@@ -13,14 +13,14 @@ export function ErrorPage({ error }: ErrorPageProps) {
     <PageLayout centered>
       <PageHeader icon="error" iconVariant="error" title="Something went wrong" />
 
-      <Card class="mb-6 animate-slide-up">
+      <Card class="animate-slide-up mb-6">
         <div class="flex items-start gap-3">
-          <Icon name="error" class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p class="text-slate-600 text-sm">{error}</p>
+          <Icon name="error" class="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
+          <p class="text-sm text-slate-600">{error}</p>
         </div>
       </Card>
 
-      <a href="/upload" class="block animate-slide-up stagger-1">
+      <a href="/upload" class="animate-slide-up stagger-1 block">
         <Button>
           <Icon name="arrowLeft" />
           Try Again

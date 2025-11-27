@@ -21,7 +21,7 @@ export function ReceiptSummary({
   const hasMismatch = originalTotal !== undefined && Math.abs(total - originalTotal) > 1;
 
   return (
-    <Card padding="md" class="mb-6 animate-slide-up">
+    <Card padding="md" class="animate-slide-up mb-6">
       <div class="space-y-2">
         <div class="flex justify-between text-sm">
           <span class="text-slate-500">Subtotal</span>
@@ -39,18 +39,18 @@ export function ReceiptSummary({
             <span class="text-slate-700">{formatMoney(totalTax)}</span>
           </div>
         )}
-        <div class="flex justify-between pt-2 border-t border-slate-100">
+        <div class="flex justify-between border-t border-slate-100 pt-2">
           <span class="font-semibold text-slate-800">Total</span>
-          <span class="font-bold text-slate-800 text-lg">{formatMoney(total)}</span>
+          <span class="text-lg font-bold text-slate-800">{formatMoney(total)}</span>
         </div>
         {hasMismatch && (
-          <div class="flex justify-between text-sm pt-2">
+          <div class="flex justify-between pt-2 text-sm">
             <span class="text-amber-600">Original Receipt</span>
-            <span class="text-amber-600 font-medium">{formatMoney(originalTotal)}</span>
+            <span class="font-medium text-amber-600">{formatMoney(originalTotal)}</span>
           </div>
         )}
       </div>
-      {showTaxNote && totalTax > 0 && <p class="text-xs text-slate-400 mt-3">* Taxable items</p>}
+      {showTaxNote && totalTax > 0 && <p class="mt-3 text-xs text-slate-400">* Taxable items</p>}
     </Card>
   );
 }

@@ -33,7 +33,7 @@ type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'class'> &
 export function Input({ label, error, class: className, ...props }: InputProps) {
   return (
     <div class="w-full">
-      {label && <label class="block text-sm font-medium text-slate-700 mb-2">{label}</label>}
+      {label && <label class="mb-2 block text-sm font-medium text-slate-700">{label}</label>}
       <input class={cn(inputVariants({ hasError: !!error }), className)} {...props} />
       {error && <p class="mt-1 text-sm text-red-600">{error}</p>}
     </div>
