@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { Request, Response, RequestHandler } from 'express';
 import crypto from 'crypto';
 import multer from 'multer';
 import { config } from '../config.js';

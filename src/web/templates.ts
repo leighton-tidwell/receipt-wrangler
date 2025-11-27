@@ -15,17 +15,6 @@ interface PageData {
   receiptText?: string;
 }
 
-function escapeForScript(str: string): string {
-  return str
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/"/g, '\\"')
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r');
-}
-
 function getDevHtml(): string {
   return `<!DOCTYPE html>
 <html lang="en">
