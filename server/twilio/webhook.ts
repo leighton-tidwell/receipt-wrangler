@@ -1,4 +1,7 @@
+import { openai } from '@ai-sdk/openai';
+import { generateObject } from 'ai';
 import type { Request, Response } from 'express';
+import { z } from 'zod';
 
 import { processReceipt } from '@/server/agent/index.js';
 import { config } from '@/server/config.js';
@@ -10,6 +13,20 @@ import {
 } from '@/server/state/conversation.js';
 import { sendToReceiver, sendToSender } from '@/server/twilio/send.js';
 import { formatConfirmationMessage, formatFinalSummary } from '@/server/utils/format.js';
+
+// Ensure OpenAI API key is set
+process.env.OPENAI_API_KEY = config.openaiApiKey;
+
+const storeInfoSchema = z.object({
+  storeName: z
+    .string()
+    .nullable()
+    .describe('The store name if provided by the user, or null if not mentioned'),
+  date: z
+    .string()
+    .nullable()
+    .describe('The date if provided by the user (in any format), or null if not mentioned'),
+});
 
 function buildStoreInfoPrompt(receipt: ParsedReceipt): string {
   const needed: string[] = [];
@@ -24,32 +41,25 @@ function buildStoreInfoPrompt(receipt: ParsedReceipt): string {
   return `I couldn't detect the ${needed.join(' or ')}. Please reply with the ${needed.join(' and ')} (e.g., "${example}").`;
 }
 
-function parseStoreInfoResponse(
+async function parseStoreInfoWithLLM(
   text: string,
   receipt: ParsedReceipt
-): { storeName?: string; date?: string } {
-  const result: { storeName?: string; date?: string } = {};
+): Promise<{ storeName: string | null; date: string | null }> {
+  const needing: string[] = [];
+  if (receipt.missingStoreName) needing.push('store name');
+  if (receipt.missingDate) needing.push('date');
 
-  // Try to extract date (look for date-like patterns)
-  const dateMatch = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/);
-  if (dateMatch && receipt.missingDate) {
-    result.date = dateMatch[1];
-  }
+  const { object } = await generateObject({
+    model: openai('gpt-5-nano'),
+    schema: storeInfoSchema,
+    prompt: `The user was asked to provide the ${needing.join(' and ')} for a receipt. Extract the information from their response.
 
-  // Everything else (minus the date) is likely the store name
-  if (receipt.missingStoreName) {
-    let storeName = text;
-    if (dateMatch) {
-      storeName = text.replace(dateMatch[0], '').trim();
-    }
-    // Clean up punctuation
-    storeName = storeName.replace(/^[,\s]+|[,\s]+$/g, '').trim();
-    if (storeName) {
-      result.storeName = storeName;
-    }
-  }
+User's response: "${text}"
 
-  return result;
+Extract the store name and/or date if provided. Return null for any field not mentioned.`,
+  });
+
+  return object;
 }
 
 interface TwilioWebhookBody {
@@ -198,7 +208,7 @@ export async function handleIncomingSms(req: Request, res: Response): Promise<vo
           break;
         }
 
-        const parsed = parseStoreInfoResponse(messageText, conversation.parsedReceipt);
+        const parsed = await parseStoreInfoWithLLM(messageText, conversation.parsedReceipt);
 
         // Update the receipt with provided info and clear flags
         const updatedReceipt = { ...conversation.parsedReceipt };
