@@ -34,10 +34,10 @@ function buildStoreInfoPrompt(receipt: ParsedReceipt): string {
   if (receipt.missingDate) needed.push('date');
   const example =
     receipt.missingStoreName && receipt.missingDate
-      ? 'HEB, 11/26/2024'
+      ? 'HEB, 11/26/25'
       : receipt.missingStoreName
         ? 'HEB'
-        : '11/26/2024';
+        : '11/26/25';
   return `I couldn't detect the ${needed.join(' or ')}. Please reply with the ${needed.join(' and ')} (e.g., "${example}").`;
 }
 
@@ -49,14 +49,20 @@ async function parseStoreInfoWithLLM(
   if (receipt.missingStoreName) needing.push('store name');
   if (receipt.missingDate) needing.push('date');
 
+  const today = new Date();
+  const currentDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear().toString().slice(-2)}`;
+
   const { object } = await generateObject({
     model: openai('gpt-5-nano'),
     schema: storeInfoSchema,
     prompt: `The user was asked to provide the ${needing.join(' and ')} for a receipt. Extract the information from their response.
 
+Today's date is ${currentDate}.
+
 User's response: "${text}"
 
-Extract the store name and/or date if provided. Return null for any field not mentioned.`,
+Extract the store name and/or date if provided. Return null for any field not mentioned.
+If a date is provided, convert it to MM/DD/YY format (e.g., "11/26/25"). Handle relative dates like "today" or "yesterday" using today's date.`,
   });
 
   return object;
