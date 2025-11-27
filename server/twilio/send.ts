@@ -2,9 +2,15 @@ import twilio from 'twilio';
 
 import { config } from '@/server/config.js';
 
-const client = twilio(config.twilioAccountSid, config.twilioAuthToken);
+const client = config.disableTwilio
+  ? null
+  : twilio(config.twilioAccountSid, config.twilioAuthToken);
 
 export async function sendSms(to: string, body: string): Promise<void> {
+  if (config.disableTwilio || !client) {
+    console.log(`[TWILIO DISABLED] Would send to ${to}: ${body}`);
+    return;
+  }
   await client.messages.create({
     body,
     from: config.twilioPhoneNumber,

@@ -8,15 +8,19 @@ function requireEnv(name: string): string {
   return value;
 }
 
+// Check if Twilio is disabled
+const disableTwilio = process.env.DISABLE_TWILIO === 'true';
+
 export const config = {
   // Twilio
-  twilioAccountSid: requireEnv('TWILIO_ACCOUNT_SID'),
-  twilioAuthToken: requireEnv('TWILIO_AUTH_TOKEN'),
-  twilioPhoneNumber: requireEnv('TWILIO_PHONE_NUMBER'),
+  disableTwilio,
+  twilioAccountSid: disableTwilio ? '' : requireEnv('TWILIO_ACCOUNT_SID'),
+  twilioAuthToken: disableTwilio ? '' : requireEnv('TWILIO_AUTH_TOKEN'),
+  twilioPhoneNumber: disableTwilio ? '' : requireEnv('TWILIO_PHONE_NUMBER'),
 
   // Phone numbers
-  senderPhoneNumber: requireEnv('SENDER_PHONE_NUMBER'),
-  receiverPhoneNumber: requireEnv('RECEIVER_PHONE_NUMBER'),
+  senderPhoneNumber: disableTwilio ? '' : requireEnv('SENDER_PHONE_NUMBER'),
+  receiverPhoneNumber: disableTwilio ? '' : requireEnv('RECEIVER_PHONE_NUMBER'),
   twilioVirtualNumber: process.env.TWILIO_VIRTUAL_NUMBER || null,
 
   // OpenAI

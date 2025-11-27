@@ -127,6 +127,12 @@ function isRejection(text: string): boolean {
 }
 
 export async function handleIncomingSms(req: Request, res: Response): Promise<void> {
+  if (config.disableTwilio) {
+    console.log('[TWILIO DISABLED] Webhook called but Twilio is disabled');
+    res.status(503).send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
+    return;
+  }
+
   const body = req.body as TwilioWebhookBody;
   const from = body.From;
   const messageText = body.Body?.trim() || '';
