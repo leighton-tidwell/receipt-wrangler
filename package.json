@@ -36,6 +36,10 @@
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.8.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.8.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@preact/preset-vite": "^2.8.2",
