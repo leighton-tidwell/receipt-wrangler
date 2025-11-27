@@ -1,14 +1,14 @@
 import { useState } from 'preact/hooks';
-import { LoadingOverlay } from '../components/LoadingOverlay';
-import { PageLayout } from '../components/ui/PageLayout';
-import { Alert } from '../components/ui/Alert';
-import { Button } from '../components/ui/Button';
-import { Icon } from '../components/ui/Icon';
-import { ReceiptHeader } from '../components/receipt/ReceiptHeader';
-import { CategoryBreakdownList } from '../components/receipt/CategoryBreakdownList';
-import { ReceiptSummary } from '../components/receipt/ReceiptSummary';
-import { CorrectionForm } from '../components/receipt/CorrectionForm';
-import type { ParsedReceipt } from '../types';
+import { LoadingOverlay } from '@/shared/components/LoadingOverlay';
+import { PageLayout } from '@/shared/components/ui/PageLayout';
+import { Alert } from '@/shared/components/ui/Alert';
+import { Button } from '@/shared/components/ui/Button';
+import { Icon } from '@/shared/components/ui/Icon';
+import { ReceiptHeader } from '@/shared/components/receipt/ReceiptHeader';
+import { CategoryBreakdownList } from '@/shared/components/receipt/CategoryBreakdownList';
+import { ReceiptSummary } from '@/shared/components/receipt/ReceiptSummary';
+import { CorrectionForm } from '@/shared/components/receipt/CorrectionForm';
+import type { ParsedReceipt } from '@/shared/types';
 
 interface ReviewPageProps {
   receipt: ParsedReceipt;

@@ -1,12 +1,12 @@
 import { useState } from 'preact/hooks';
-import { LoadingOverlay } from '../components/LoadingOverlay';
-import { PageLayout } from '../components/ui/PageLayout';
-import { PageHeader } from '../components/ui/PageHeader';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
-import { Alert } from '../components/ui/Alert';
-import { Icon } from '../components/ui/Icon';
+import { LoadingOverlay } from '@/shared/components/LoadingOverlay';
+import { PageLayout } from '@/shared/components/ui/PageLayout';
+import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Card } from '@/shared/components/ui/Card';
+import { Input } from '@/shared/components/ui/Input';
+import { Button } from '@/shared/components/ui/Button';
+import { Alert } from '@/shared/components/ui/Alert';
+import { Icon } from '@/shared/components/ui/Icon';
 
 interface PasswordPageProps {
   error?: string;

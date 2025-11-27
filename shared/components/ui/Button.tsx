@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ComponentChildren } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/cn';
+import { cn } from '@/shared/lib/cn';
 
 const buttonVariants = cva(
   'font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2',

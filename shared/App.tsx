@@ -1,9 +1,9 @@
-import { PasswordPage } from './pages/PasswordPage';
-import { UploadPage } from './pages/UploadPage';
-import { ReviewPage } from './pages/ReviewPage';
-import { DonePage } from './pages/DonePage';
-import { ErrorPage } from './pages/ErrorPage';
-import type { PageData } from './types';
+import { PasswordPage } from '@/shared/pages/PasswordPage';
+import { UploadPage } from '@/shared/pages/UploadPage';
+import { ReviewPage } from '@/shared/pages/ReviewPage';
+import { DonePage } from '@/shared/pages/DonePage';
+import { ErrorPage } from '@/shared/pages/ErrorPage';
+import type { PageData } from '@/shared/types';
 
 interface AppProps {
   pageData: PageData;

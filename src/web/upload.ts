@@ -1,18 +1,18 @@
 import type { Request, Response, RequestHandler } from 'express';
 import crypto from 'crypto';
 import multer from 'multer';
-import { config } from '../config.js';
-import { processReceipt } from '../agent/index.js';
-import { sendToReceiver } from '../twilio/send.js';
-import { formatFinalSummary } from '../utils/format.js';
+import { config } from '@/config.js';
+import { processReceipt } from '@/agent/index.js';
+import { sendToReceiver } from '@/twilio/send.js';
+import { formatFinalSummary } from '@/utils/format.js';
 import {
   passwordPage,
   uploadPage,
   reviewPage,
   donePage,
   processingErrorPage,
-} from './templates.js';
-import type { ParsedReceipt } from '../state/conversation.js';
+} from '@/web/templates.js';
+import type { ParsedReceipt } from '@/state/conversation.js';
 
 // Configure multer for memory storage
 const upload = multer({

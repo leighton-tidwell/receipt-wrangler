@@ -1,4 +1,4 @@
-import { Card } from '../ui/Card';
+import { Card } from '@/shared/components/ui/Card';
 
 interface ReceiptHeaderProps {
   storeName: string;

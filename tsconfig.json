@@ -13,7 +13,12 @@
     "declarationMap": true,
     "sourceMap": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "preact"
+    "jsxImportSource": "preact",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/shared/*": ["./shared/*"]
+    }
   },
   "include": ["src/**/*", "shared/**/*"],
   "exclude": ["node_modules", "dist", "client"]

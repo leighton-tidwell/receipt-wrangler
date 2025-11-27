@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/cn';
+import { cn } from '@/shared/lib/cn';
 
 const inputVariants = cva(
   [

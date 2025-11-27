@@ -1,4 +1,4 @@
-import { Icon, type IconName } from './ui/Icon';
+import { Icon, type IconName } from '@/shared/components/ui/Icon';
 
 interface CategoryIconProps {
   category: string;

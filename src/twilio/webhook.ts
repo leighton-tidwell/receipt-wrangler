@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
-import { config } from '../config.js';
-import { sendToSender, sendToReceiver } from './send.js';
-import { getConversation, updateConversation, resetConversation } from '../state/conversation.js';
-import { processReceipt } from '../agent/index.js';
-import { formatConfirmationMessage, formatFinalSummary } from '../utils/format.js';
+import { config } from '@/config.js';
+import { sendToSender, sendToReceiver } from '@/twilio/send.js';
+import { getConversation, updateConversation, resetConversation } from '@/state/conversation.js';
+import { processReceipt } from '@/agent/index.js';
+import { formatConfirmationMessage, formatFinalSummary } from '@/utils/format.js';
 
 interface TwilioWebhookBody {
   From: string;

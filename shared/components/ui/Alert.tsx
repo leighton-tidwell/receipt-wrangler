@@ -1,7 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/cn';
-import { Icon } from './Icon';
+import { cn } from '@/shared/lib/cn';
+import { Icon } from '@/shared/components/ui/Icon';
 
 const alertContainer = cva('p-4 border rounded-xl', {
   variants: {

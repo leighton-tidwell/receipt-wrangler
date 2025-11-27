@@ -28,7 +28,8 @@ export default defineConfig(({ mode }) => ({
   },
   resolve: {
     alias: {
-      '@shared': resolve(__dirname, '../shared'),
+      '@/shared': resolve(__dirname, '../shared'),
+      '@': resolve(__dirname, './src'),
       // Use root preact to match SSR (avoid multiple Preact instances)
       preact: resolve(__dirname, '../node_modules/preact'),
       'preact/hooks': resolve(__dirname, '../node_modules/preact/hooks'),

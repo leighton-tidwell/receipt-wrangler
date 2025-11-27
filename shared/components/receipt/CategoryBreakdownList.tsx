@@ -1,7 +1,7 @@
-import { cn } from '../../lib/cn';
-import { CategoryIcon } from '../CategoryIcon';
-import { formatMoney, getCategoryLabel } from '../../utils';
-import type { CategoryBreakdown } from '../../types';
+import { cn } from '@/shared/lib/cn';
+import { CategoryIcon } from '@/shared/components/CategoryIcon';
+import { formatMoney, getCategoryLabel } from '@/shared/utils';
+import type { CategoryBreakdown } from '@/shared/types';
 
 interface CategoryBreakdownListProps {
   categories: Record<string, CategoryBreakdown>;

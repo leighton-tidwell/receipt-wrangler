@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/cn';
+import { cn } from '@/shared/lib/cn';
 
 const layoutVariants = cva(
   'min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-8 sm:py-12',

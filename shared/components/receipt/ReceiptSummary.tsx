@@ -1,5 +1,5 @@
-import { Card } from '../ui/Card';
-import { formatMoney } from '../../utils';
+import { Card } from '@/shared/components/ui/Card';
+import { formatMoney } from '@/shared/utils';
 
 interface ReceiptSummaryProps {
   subtotal: number;

@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/cn';
+import { cn } from '@/shared/lib/cn';
 
 const cardVariants = cva('bg-white rounded-2xl shadow-sm border border-slate-200', {
   variants: {

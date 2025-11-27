@@ -1,6 +1,6 @@
-import { Card } from '../ui/Card';
-import { TextArea } from '../ui/TextArea';
-import { Button } from '../ui/Button';
+import { Card } from '@/shared/components/ui/Card';
+import { TextArea } from '@/shared/components/ui/TextArea';
+import { Button } from '@/shared/components/ui/Button';
 
 interface CorrectionFormProps {
   imageData: string[];

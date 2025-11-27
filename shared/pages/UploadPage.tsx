@@ -1,14 +1,14 @@
 import { useState } from 'preact/hooks';
-import { LoadingOverlay } from '../components/LoadingOverlay';
-import { PageLayout } from '../components/ui/PageLayout';
-import { PageHeader } from '../components/ui/PageHeader';
-import { Card } from '../components/ui/Card';
-import { TextArea } from '../components/ui/TextArea';
-import { Button } from '../components/ui/Button';
-import { Alert } from '../components/ui/Alert';
-import { Icon } from '../components/ui/Icon';
-import { FileDropZone } from '../components/upload/FileDropZone';
-import { cn } from '../lib/cn';
+import { LoadingOverlay } from '@/shared/components/LoadingOverlay';
+import { PageLayout } from '@/shared/components/ui/PageLayout';
+import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Card } from '@/shared/components/ui/Card';
+import { TextArea } from '@/shared/components/ui/TextArea';
+import { Button } from '@/shared/components/ui/Button';
+import { Alert } from '@/shared/components/ui/Alert';
+import { Icon } from '@/shared/components/ui/Icon';
+import { FileDropZone } from '@/shared/components/upload/FileDropZone';
+import { cn } from '@/shared/lib/cn';
 
 type UploadMode = 'image' | 'receipt';
 
