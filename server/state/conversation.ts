@@ -1,4 +1,4 @@
-export type ConversationState = 'IDLE' | 'PROCESSING' | 'AWAITING_CONFIRM';
+export type ConversationState = 'IDLE' | 'PROCESSING' | 'AWAITING_STORE_INFO' | 'AWAITING_CONFIRM';
 
 export interface ReceiptItem {
   name: string;
@@ -18,6 +18,8 @@ export interface CategoryBreakdown {
 export interface ParsedReceipt {
   storeName: string;
   date: string;
+  missingStoreName: boolean;
+  missingDate: boolean;
   categories: {
     groceries: CategoryBreakdown;
     babySupplies: CategoryBreakdown;

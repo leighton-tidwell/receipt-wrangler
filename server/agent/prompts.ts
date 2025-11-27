@@ -84,9 +84,17 @@ Also split any delivery fees, service fees, or tips evenly across all categories
 
 Only include categories that have items. Do not include empty categories.
 
+**Store info flags:**
+- Set "missingStoreName": true if the store name is not visible/provided in the receipt
+- Set "missingDate": true if the date is not visible/provided in the receipt
+- If you cannot determine the store name, set storeName to empty string "" and missingStoreName to true
+- If you cannot determine the date, set date to empty string "" and missingDate to true
+
 {
   "storeName": "Store Name",
   "date": "Nov 26, 2025",
+  "missingStoreName": false,
+  "missingDate": false,
   "categories": {
     "groceries": {
       "items": [{"name": "Milk", "price": 399, "taxable": false, "unclear": false}],

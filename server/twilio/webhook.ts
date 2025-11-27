@@ -4,11 +4,53 @@ import { processReceipt } from '@/server/agent/index.js';
 import { config } from '@/server/config.js';
 import {
   getConversation,
+  type ParsedReceipt,
   resetConversation,
   updateConversation,
 } from '@/server/state/conversation.js';
 import { sendToReceiver, sendToSender } from '@/server/twilio/send.js';
 import { formatConfirmationMessage, formatFinalSummary } from '@/server/utils/format.js';
+
+function buildStoreInfoPrompt(receipt: ParsedReceipt): string {
+  const needed: string[] = [];
+  if (receipt.missingStoreName) needed.push('store name');
+  if (receipt.missingDate) needed.push('date');
+  const example =
+    receipt.missingStoreName && receipt.missingDate
+      ? 'HEB, 11/26/2024'
+      : receipt.missingStoreName
+        ? 'HEB'
+        : '11/26/2024';
+  return `I couldn't detect the ${needed.join(' or ')}. Please reply with the ${needed.join(' and ')} (e.g., "${example}").`;
+}
+
+function parseStoreInfoResponse(
+  text: string,
+  receipt: ParsedReceipt
+): { storeName?: string; date?: string } {
+  const result: { storeName?: string; date?: string } = {};
+
+  // Try to extract date (look for date-like patterns)
+  const dateMatch = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/);
+  if (dateMatch && receipt.missingDate) {
+    result.date = dateMatch[1];
+  }
+
+  // Everything else (minus the date) is likely the store name
+  if (receipt.missingStoreName) {
+    let storeName = text;
+    if (dateMatch) {
+      storeName = text.replace(dateMatch[0], '').trim();
+    }
+    // Clean up punctuation
+    storeName = storeName.replace(/^[,\s]+|[,\s]+$/g, '').trim();
+    if (storeName) {
+      result.storeName = storeName;
+    }
+  }
+
+  return result;
+}
 
 interface TwilioWebhookBody {
   From: string;
@@ -122,12 +164,20 @@ export async function handleIncomingSms(req: Request, res: Response): Promise<vo
         }
 
         if (result.parsedReceipt) {
-          updateConversation({
-            state: 'AWAITING_CONFIRM',
-            parsedReceipt: result.parsedReceipt,
-          });
-          const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-          await sendToSender(from, confirmMsg);
+          if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
+            updateConversation({
+              state: 'AWAITING_STORE_INFO',
+              parsedReceipt: result.parsedReceipt,
+            });
+            await sendToSender(from, buildStoreInfoPrompt(result.parsedReceipt));
+          } else {
+            updateConversation({
+              state: 'AWAITING_CONFIRM',
+              parsedReceipt: result.parsedReceipt,
+            });
+            const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
+            await sendToSender(from, confirmMsg);
+          }
         }
         break;
       }
@@ -138,6 +188,43 @@ export async function handleIncomingSms(req: Request, res: Response): Promise<vo
           conversation.senderPhone!,
           'Still processing your receipt, please wait a moment...'
         );
+        break;
+      }
+
+      case 'AWAITING_STORE_INFO': {
+        if (!conversation.parsedReceipt) {
+          resetConversation();
+          await sendToSender(from, 'Something went wrong. Please send your receipt again.');
+          break;
+        }
+
+        const parsed = parseStoreInfoResponse(messageText, conversation.parsedReceipt);
+
+        // Update the receipt with provided info and clear flags
+        const updatedReceipt = { ...conversation.parsedReceipt };
+        if (parsed.storeName) {
+          updatedReceipt.storeName = parsed.storeName;
+          updatedReceipt.missingStoreName = false;
+        }
+        if (parsed.date) {
+          updatedReceipt.date = parsed.date;
+          updatedReceipt.missingDate = false;
+        }
+
+        // Check if we still need info
+        if (updatedReceipt.missingStoreName || updatedReceipt.missingDate) {
+          updateConversation({ parsedReceipt: updatedReceipt });
+          await sendToSender(from, buildStoreInfoPrompt(updatedReceipt));
+          break;
+        }
+
+        // All info collected, proceed to confirmation
+        updateConversation({
+          state: 'AWAITING_CONFIRM',
+          parsedReceipt: updatedReceipt,
+        });
+        const confirmMsg = formatConfirmationMessage(updatedReceipt);
+        await sendToSender(from, confirmMsg);
         break;
       }
 
@@ -184,12 +271,20 @@ export async function handleIncomingSms(req: Request, res: Response): Promise<vo
         }
 
         if (result.parsedReceipt) {
-          updateConversation({
-            state: 'AWAITING_CONFIRM',
-            parsedReceipt: result.parsedReceipt,
-          });
-          const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-          await sendToSender(from, confirmMsg);
+          if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
+            updateConversation({
+              state: 'AWAITING_STORE_INFO',
+              parsedReceipt: result.parsedReceipt,
+            });
+            await sendToSender(from, buildStoreInfoPrompt(result.parsedReceipt));
+          } else {
+            updateConversation({
+              state: 'AWAITING_CONFIRM',
+              parsedReceipt: result.parsedReceipt,
+            });
+            const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
+            await sendToSender(from, confirmMsg);
+          }
         }
         break;
       }

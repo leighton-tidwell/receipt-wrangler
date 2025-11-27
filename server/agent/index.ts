@@ -25,6 +25,8 @@ const categoryBreakdownSchema = z.object({
 const receiptResponseSchema = z.object({
   storeName: z.string(),
   date: z.string(),
+  missingStoreName: z.boolean(),
+  missingDate: z.boolean(),
   categories: z.record(z.string(), categoryBreakdownSchema),
   originalTotal: z.number(),
   hasUnclearItems: z.boolean().optional().default(false),
@@ -105,6 +107,8 @@ export async function processReceipt(
     const receipt: ParsedReceipt = {
       storeName: output.storeName,
       date: output.date,
+      missingStoreName: output.missingStoreName,
+      missingDate: output.missingDate,
       categories: output.categories as ParsedReceipt['categories'],
       originalTotal: output.originalTotal,
       hasUnclearItems: output.hasUnclearItems ?? false,
