@@ -76,8 +76,12 @@ export async function handleIncomingSms(req: Request, res: Response): Promise<vo
 
   console.log(`[SMS <- ${from}] "${messageText}" (${mediaUrls.length} images)`);
 
-  // Only respond to authorized numbers (sender or receiver)
-  const authorizedNumbers = [config.senderPhoneNumber, config.receiverPhoneNumber];
+  // Only respond to authorized numbers (sender, receiver, or virtual number)
+  const authorizedNumbers = [
+    config.senderPhoneNumber,
+    config.receiverPhoneNumber,
+    config.twilioVirtualNumber,
+  ].filter(Boolean) as string[];
   if (!authorizedNumbers.includes(from)) {
     console.log(`Ignoring message from unauthorized number: ${from}`);
     res.status(200).send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
