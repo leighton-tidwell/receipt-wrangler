@@ -1,7 +1,13 @@
 import { useState } from "preact/hooks";
 import { LoadingOverlay } from "../components/LoadingOverlay";
-import { CategoryIcon } from "../components/CategoryIcon";
-import { formatMoney, getCategoryLabel } from "../utils";
+import { PageLayout } from "../components/ui/PageLayout";
+import { Alert } from "../components/ui/Alert";
+import { Button } from "../components/ui/Button";
+import { Icon } from "../components/ui/Icon";
+import { ReceiptHeader } from "../components/receipt/ReceiptHeader";
+import { CategoryBreakdownList } from "../components/receipt/CategoryBreakdownList";
+import { ReceiptSummary } from "../components/receipt/ReceiptSummary";
+import { CorrectionForm } from "../components/receipt/CorrectionForm";
 import type { ParsedReceipt } from "../types";
 
 interface ReviewPageProps {
@@ -32,7 +38,6 @@ export function ReviewPage({
     totalTax += receipt.categories[key].tax;
   }
   const total = subtotal + totalFees + totalTax;
-  const hasMismatch = Math.abs(total - receipt.originalTotal) > 1;
 
   const handleReprocess = () => {
     setIsProcessing(true);
@@ -43,7 +48,7 @@ export function ReviewPage({
   };
 
   return (
-    <div class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-8">
+    <PageLayout>
       {(isProcessing || isSending) && (
         <LoadingOverlay
           message={isProcessing ? "Reprocessing..." : "Sending..."}
@@ -51,279 +56,82 @@ export function ReviewPage({
         />
       )}
 
-      <div class="max-w-lg mx-auto">
-        <div class="flex items-center gap-3 mb-6 animate-fade-in">
-          <a
-            href="/upload"
-            class="p-2 -ml-2 text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </a>
-          <h1 class="text-xl font-bold text-slate-800">Review Breakdown</h1>
-        </div>
-
-        {error && (
-          <div class="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl animate-fade-in">
-            <div class="flex items-start gap-3">
-              <svg
-                class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p class="text-red-700 text-sm">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {(receipt.hasUnclearItems || receipt.hasMissingItems) && (
-          <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl animate-fade-in">
-            <div class="flex items-start gap-3">
-              <svg
-                class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <div class="text-amber-800 text-sm">
-                {receipt.hasUnclearItems && receipt.hasMissingItems ? (
-                  <p>
-                    <strong>Attention needed:</strong> Some items couldn't be
-                    read clearly, and there appear to be missing items from the
-                    receipt. Please review the "Unknown" category and provide
-                    corrections if needed.
-                  </p>
-                ) : receipt.hasUnclearItems ? (
-                  <p>
-                    <strong>Unclear items detected:</strong> Some items couldn't
-                    be read clearly from the receipt. They've been added to the
-                    "Unknown" category. Please review and provide corrections if
-                    needed.
-                  </p>
-                ) : (
-                  <p>
-                    <strong>Missing items detected:</strong> The itemized total
-                    doesn't match the receipt total. Missing items have been
-                    added to the "Unknown" category. Please review or provide
-                    additional receipt details.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-4 animate-slide-up">
-          <div class="flex items-center justify-between mb-1">
-            <h2 class="font-semibold text-slate-800">{receipt.storeName}</h2>
-            <span class="text-sm text-slate-400">{receipt.date}</span>
-          </div>
-        </div>
-
-        <div class="space-y-3 mb-6">
-          {Object.entries(receipt.categories)
-            .filter(([_, breakdown]) => breakdown.items.length > 0)
-            .map(([key, breakdown]) => (
-              <div
-                key={key}
-                class="bg-white rounded-xl border border-slate-200 overflow-hidden animate-fade-in"
-              >
-                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <span class="text-primary-500">
-                      <CategoryIcon category={key} />
-                    </span>
-                    <span class="font-semibold text-slate-700">
-                      {getCategoryLabel(key)}
-                    </span>
-                  </div>
-                  <div class="text-right">
-                    <span class="font-bold text-slate-800">
-                      {formatMoney(breakdown.total)}
-                    </span>
-                    {(breakdown.tax > 0 || (breakdown.fees || 0) > 0) && (
-                      <span class="text-slate-400 text-xs ml-1">
-                        (+{formatMoney(breakdown.tax + (breakdown.fees || 0))}{" "}
-                        {(breakdown.fees || 0) > 0 ? "tax/fees" : "tax"})
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div class="px-4 py-2">
-                  {breakdown.items.map((item, i) => (
-                    <div
-                      key={i}
-                      class={`flex justify-between items-center py-2 border-b border-slate-100 last:border-0 ${
-                        item.unclear ? "bg-amber-50 -mx-4 px-4" : ""
-                      }`}
-                    >
-                      <span
-                        class={`text-sm ${
-                          item.unclear
-                            ? "text-amber-700 italic"
-                            : "text-slate-600"
-                        }`}
-                      >
-                        {item.name}
-                        {item.taxable && (
-                          <span class="ml-1 text-xs text-slate-400">*</span>
-                        )}
-                        {item.unclear && (
-                          <span class="ml-1 text-xs text-amber-500">
-                            (unclear)
-                          </span>
-                        )}
-                      </span>
-                      <span
-                        class={`font-medium text-sm ${
-                          item.unclear ? "text-amber-700" : "text-slate-800"
-                        }`}
-                      >
-                        {formatMoney(item.price)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6 animate-slide-up">
-          <div class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-500">Subtotal</span>
-              <span class="text-slate-700">{formatMoney(subtotal)}</span>
-            </div>
-            {totalFees > 0 && (
-              <div class="flex justify-between text-sm">
-                <span class="text-slate-500">Fees</span>
-                <span class="text-slate-700">{formatMoney(totalFees)}</span>
-              </div>
-            )}
-            {totalTax > 0 && (
-              <div class="flex justify-between text-sm">
-                <span class="text-slate-500">Tax</span>
-                <span class="text-slate-700">{formatMoney(totalTax)}</span>
-              </div>
-            )}
-            <div class="flex justify-between pt-2 border-t border-slate-100">
-              <span class="font-semibold text-slate-800">Total</span>
-              <span class="font-bold text-slate-800 text-lg">
-                {formatMoney(total)}
-              </span>
-            </div>
-            {hasMismatch && (
-              <div class="flex justify-between text-sm pt-2">
-                <span class="text-amber-600">Original Receipt</span>
-                <span class="text-amber-600 font-medium">
-                  {formatMoney(receipt.originalTotal)}
-                </span>
-              </div>
-            )}
-          </div>
-          {totalTax > 0 && (
-            <p class="text-xs text-slate-400 mt-3">* Taxable items</p>
-          )}
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-4 animate-slide-up">
-          <h3 class="font-semibold text-slate-700 mb-3">Need corrections?</h3>
-          <form
-            method="POST"
-            action="/upload/reprocess"
-            onSubmit={handleReprocess}
-          >
-            {imageData.map((img, i) => (
-              <input key={i} type="hidden" name={`imageData${i}`} value={img} />
-            ))}
-            <input
-              type="hidden"
-              name="imageCount"
-              value={imageData.length.toString()}
-            />
-            <input
-              type="hidden"
-              name="previousInstructions"
-              value={previousInstructions || ""}
-            />
-            <input type="hidden" name="receiptText" value={receiptText || ""} />
-            <textarea
-              name="corrections"
-              value={corrections}
-              onInput={(e) =>
-                setCorrections((e.target as HTMLTextAreaElement).value)
-              }
-              rows={2}
-              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all resize-none text-sm mb-3 outline-none"
-              placeholder="e.g., Move apples to baby supplies"
-            />
-            <button
-              type="submit"
-              disabled={isProcessing}
-              class="w-full py-3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-medium rounded-xl transition-all disabled:opacity-50"
-            >
-              Reprocess with Corrections
-            </button>
-          </form>
-        </div>
-
-        <form
-          method="POST"
-          action="/upload/confirm"
-          onSubmit={handleConfirm}
-          class="animate-slide-up"
+      <div class="flex items-center gap-3 mb-6 animate-fade-in">
+        <a
+          href="/upload"
+          class="p-2 -ml-2 text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <input type="hidden" name="receipt" value={JSON.stringify(receipt)} />
-          <button
-            type="submit"
-            disabled={isSending}
-            class="w-full py-4 bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all disabled:opacity-50"
-          >
-            <span class="flex items-center justify-center gap-2">
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Confirm & Send
-            </span>
-          </button>
-        </form>
+          <Icon name="chevronLeft" class="w-6 h-6" />
+        </a>
+        <h1 class="text-xl font-bold text-slate-800">Review Breakdown</h1>
       </div>
-    </div>
+
+      {error && (
+        <Alert variant="error" class="mb-6 animate-fade-in">
+          {error}
+        </Alert>
+      )}
+
+      {(receipt.hasUnclearItems || receipt.hasMissingItems) && (
+        <Alert variant="warning" class="mb-6 animate-fade-in">
+          {receipt.hasUnclearItems && receipt.hasMissingItems ? (
+            <p>
+              <strong>Attention needed:</strong> Some items couldn't be read
+              clearly, and there appear to be missing items from the receipt.
+              Please review the "Unknown" category and provide corrections if
+              needed.
+            </p>
+          ) : receipt.hasUnclearItems ? (
+            <p>
+              <strong>Unclear items detected:</strong> Some items couldn't be
+              read clearly from the receipt. They've been added to the "Unknown"
+              category. Please review and provide corrections if needed.
+            </p>
+          ) : (
+            <p>
+              <strong>Missing items detected:</strong> The itemized total
+              doesn't match the receipt total. Missing items have been added to
+              the "Unknown" category. Please review or provide additional
+              receipt details.
+            </p>
+          )}
+        </Alert>
+      )}
+
+      <ReceiptHeader storeName={receipt.storeName} date={receipt.date} />
+
+      <CategoryBreakdownList categories={receipt.categories} variant="detailed" />
+
+      <ReceiptSummary
+        subtotal={subtotal}
+        totalFees={totalFees}
+        totalTax={totalTax}
+        total={total}
+        originalTotal={receipt.originalTotal}
+      />
+
+      <CorrectionForm
+        imageData={imageData}
+        previousInstructions={previousInstructions}
+        receiptText={receiptText}
+        corrections={corrections}
+        onCorrectionsChange={setCorrections}
+        onSubmit={handleReprocess}
+        isProcessing={isProcessing}
+      />
+
+      <form
+        method="POST"
+        action="/upload/confirm"
+        onSubmit={handleConfirm}
+        class="animate-slide-up"
+      >
+        <input type="hidden" name="receipt" value={JSON.stringify(receipt)} />
+        <Button type="submit" disabled={isSending}>
+          <Icon name="check" />
+          Confirm & Send
+        </Button>
+      </form>
+    </PageLayout>
   );
 }
