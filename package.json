@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.73",
-    "ai": "^5.0.102",
+    "ai": "6.0.0-beta.120",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
