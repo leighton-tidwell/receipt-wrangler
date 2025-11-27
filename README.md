@@ -1,12 +1,12 @@
 # Receipt Wrangler
 
-An SMS-based receipt categorization bot for family budgeting. Send receipt photos or text via SMS and get them automatically parsed and categorized into budget categories using AI.
+A Telegram-based receipt categorization bot for family budgeting. Send receipt photos or text via Telegram and get them automatically parsed and categorized into budget categories using AI.
 
 ## Features
 
 - **AI-Powered Receipt Parsing** - Uses OpenAI GPT with vision capabilities to read and interpret receipt images
 - **Smart Categorization** - Automatically distributes items into budget categories (Groceries, Baby Supplies, Pharmacy, etc.)
-- **SMS Interface** - Text receipts directly to the bot via Twilio
+- **Telegram Interface** - Message receipts directly to a Telegram bot (free, no per-message costs)
 - **Web Upload** - Password-protected web interface for uploading receipts
 - **Tax Distribution** - Evenly distributes store taxes across categories proportionally
 - **User Corrections** - Provide feedback to recategorize items when needed
@@ -16,14 +16,14 @@ An SMS-based receipt categorization bot for family budgeting. Send receipt photo
 **Backend:** Node.js, Express 5, TypeScript
 **Frontend:** Preact, Vite, Tailwind CSS
 **AI:** OpenAI GPT (via Vercel AI SDK)
-**SMS:** Twilio
+**Messaging:** Telegram Bot API
 **Deployment:** Docker
 
 ## Prerequisites
 
 - Node.js 22 (LTS)
 - pnpm 10.8+
-- Twilio account with a phone number
+- Telegram Bot (created via @BotFather)
 - OpenAI API key
 
 ## Setup
@@ -36,7 +36,19 @@ An SMS-based receipt categorization bot for family budgeting. Send receipt photo
    pnpm install
    ```
 
-2. **Configure environment variables**
+2. **Create a Telegram Bot**
+   - Open Telegram and search for `@BotFather`
+   - Send `/newbot` and follow the prompts to create your bot
+   - Copy the bot token (looks like `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
+
+3. **Get your Chat IDs**
+   - Start a chat with your new bot (search for it and click Start)
+   - Send any message to the bot
+   - Visit `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+   - Find your `chat.id` in the response (it's a number like `123456789`)
+   - Repeat for the receiver if different from sender
+
+4. **Configure environment variables**
 
    ```bash
    cp .env.example .env
@@ -45,14 +57,10 @@ An SMS-based receipt categorization bot for family budgeting. Send receipt photo
    Edit `.env` with your credentials:
 
    ```bash
-   # Twilio
-   TWILIO_ACCOUNT_SID=your_account_sid
-   TWILIO_AUTH_TOKEN=your_auth_token
-   TWILIO_PHONE_NUMBER=+1234567890
-
-   # Phone numbers
-   SENDER_PHONE_NUMBER=+1234567890    # Number authorized to send receipts
-   RECEIVER_PHONE_NUMBER=+1234567890  # Number to receive summaries
+   # Telegram Bot
+   TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+   SENDER_CHAT_ID=123456789      # Chat ID authorized to send receipts
+   RECEIVER_CHAT_ID=987654321    # Chat ID to receive summaries
 
    # OpenAI
    OPENAI_API_KEY=sk-your-api-key
@@ -65,7 +73,15 @@ An SMS-based receipt categorization bot for family budgeting. Send receipt photo
    NODE_ENV=development
    ```
 
-3. **Start development server**
+5. **Set up the webhook**
+
+   Once your server is running and publicly accessible (via ngrok, Cloudflare Tunnel, or deployed):
+
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-domain.com/webhook/telegram"
+   ```
+
+6. **Start development server**
 
    ```bash
    pnpm dev
@@ -73,12 +89,12 @@ An SMS-based receipt categorization bot for family budgeting. Send receipt photo
 
 ## Usage
 
-### Via SMS
+### Via Telegram
 
-1. Configure your Twilio webhook to point to `https://your-domain.com/webhook/sms`
-2. Send a receipt photo (with optional text instructions) to your Twilio number
+1. Open Telegram and message your bot
+2. Send a receipt photo (with optional caption for instructions)
 3. Receive a categorized breakdown
-4. Confirm or provide corrections
+4. Reply YES to confirm or provide corrections
 
 ### Via Web Upload
 
@@ -118,7 +134,7 @@ docker-compose up
 receipt-wrangler/
 ├── server/           # Express backend
 │   ├── agent/        # AI receipt processing
-│   ├── twilio/       # SMS integration
+│   ├── telegram/     # Telegram bot integration
 │   ├── web/          # Web upload endpoints
 │   └── state/        # Conversation state
 ├── client/           # Vite + Preact frontend

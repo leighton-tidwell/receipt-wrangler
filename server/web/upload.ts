@@ -5,7 +5,7 @@ import multer from 'multer';
 import { processReceipt } from '@/server/agent/index.js';
 import { config } from '@/server/config.js';
 import type { ParsedReceipt } from '@/server/state/conversation.js';
-import { sendToReceiver } from '@/server/twilio/send.js';
+import { sendToReceiver } from '@/server/telegram/send.js';
 import { formatFinalSummary } from '@/server/utils/format.js';
 import {
   donePage,
@@ -221,11 +221,11 @@ export async function postConfirm(req: Request, res: Response): Promise<void> {
     const parsedReceipt: ParsedReceipt = JSON.parse(receipt);
     const summary = formatFinalSummary(parsedReceipt);
 
-    // Try to send SMS, but don't fail if it doesn't work
+    // Send to receiver via Telegram
     try {
       await sendToReceiver(summary);
-    } catch (smsError) {
-      console.error('SMS send failed (A2P may not be approved yet):', smsError);
+    } catch (telegramError) {
+      console.error('Telegram send failed:', telegramError);
     }
 
     res.send(donePage(parsedReceipt));

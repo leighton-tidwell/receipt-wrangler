@@ -8,20 +8,11 @@ function requireEnv(name: string): string {
   return value;
 }
 
-// Check if Twilio is disabled
-const disableTwilio = process.env.DISABLE_TWILIO === 'true';
-
 export const config = {
-  // Twilio
-  disableTwilio,
-  twilioAccountSid: disableTwilio ? '' : requireEnv('TWILIO_ACCOUNT_SID'),
-  twilioAuthToken: disableTwilio ? '' : requireEnv('TWILIO_AUTH_TOKEN'),
-  twilioPhoneNumber: disableTwilio ? '' : requireEnv('TWILIO_PHONE_NUMBER'),
-
-  // Phone numbers
-  senderPhoneNumber: disableTwilio ? '' : requireEnv('SENDER_PHONE_NUMBER'),
-  receiverPhoneNumber: disableTwilio ? '' : requireEnv('RECEIVER_PHONE_NUMBER'),
-  twilioVirtualNumber: process.env.TWILIO_VIRTUAL_NUMBER || null,
+  // Telegram
+  telegramBotToken: requireEnv('TELEGRAM_BOT_TOKEN'),
+  senderChatId: requireEnv('SENDER_CHAT_ID'),
+  receiverChatId: requireEnv('RECEIVER_CHAT_ID'),
 
   // OpenAI
   openaiApiKey: requireEnv('OPENAI_API_KEY'),

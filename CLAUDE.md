@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Receipt Wrangler is an SMS-based receipt categorization bot for family budgeting. Users send receipt photos or text via SMS (Twilio) or a web interface, and the app uses OpenAI GPT with vision to parse and categorize items into budget categories with proportional tax distribution.
+Receipt Wrangler is a Telegram-based receipt categorization bot for family budgeting. Users send receipt photos or text via Telegram or a web interface, and the app uses OpenAI GPT with vision to parse and categorize items into budget categories with proportional tax distribution.
 
 ## Commands
 
@@ -29,7 +29,7 @@ pnpm docker:run       # Run Docker container with .env file
 
 - `server/` - Express 5 backend (TypeScript, ESM)
   - `agent/` - AI receipt processing using Vercel AI SDK with OpenAI GPT
-  - `twilio/` - SMS webhook handling and message sending
+  - `telegram/` - Telegram bot webhook handling and message sending
   - `web/` - Web upload endpoints with SSR
   - `state/` - Conversation state management
 - `client/` - Vite + Preact frontend (minimal, just entry point)
@@ -49,7 +49,7 @@ pnpm docker:run       # Run Docker container with .env file
 
 **Server-Side Rendering**: The web UI uses Preact SSR. Express routes render pages to HTML using `preact-render-to-string`, then hydrate on the client.
 
-**Conversation Flow**: The app tracks SMS conversations through states (IDLE → PROCESSING → AWAITING_CONFIRM) stored in memory. Users can confirm categorizations or provide corrections to reprocess.
+**Conversation Flow**: The app tracks Telegram conversations through states (IDLE → PROCESSING → AWAITING_CONFIRM) stored in memory. Users can confirm categorizations or provide corrections to reprocess.
 
 **Receipt Processing**: The AI agent uses a structured output schema with Zod validation to ensure consistent receipt parsing results.
 
@@ -57,8 +57,9 @@ pnpm docker:run       # Run Docker container with .env file
 
 Required in `.env` (see `.env.example`):
 
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`
-- `SENDER_PHONE_NUMBER`, `RECEIVER_PHONE_NUMBER`
+- `TELEGRAM_BOT_TOKEN` - Bot token from @BotFather
+- `SENDER_CHAT_ID` - Telegram chat ID authorized to send receipts
+- `RECEIVER_CHAT_ID` - Telegram chat ID to receive summaries
 - `OPENAI_API_KEY`
 - `UPLOAD_PASSWORD`
 - `PORT` (optional, defaults to 3000)
@@ -68,5 +69,5 @@ Required in `.env` (see `.env.example`):
 - **Backend**: Node.js 22+, Express 5, TypeScript (ESM)
 - **Frontend**: Preact, Vite, Tailwind CSS
 - **AI**: OpenAI GPT via Vercel AI SDK (`ai` package)
-- **SMS**: Twilio
+- **Messaging**: Telegram Bot API
 - **Validation**: Zod

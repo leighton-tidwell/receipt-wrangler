@@ -1,7 +1,7 @@
 {
   "name": "receipt-wrangler",
   "version": "1.0.0",
-  "description": "SMS-based receipt categorization bot for family budgeting",
+  "description": "Telegram-based receipt categorization bot for family budgeting",
   "type": "module",
   "main": "dist/server/index.js",
   "scripts": {
@@ -28,8 +28,7 @@
     "*.{js,jsx,json,css,md,html}": "prettier --write"
   },
   "keywords": [
-    "twilio",
-    "sms",
+    "telegram",
     "receipt",
     "budget"
   ],
@@ -78,7 +77,6 @@
     "preact-router": "^4.1.2",
     "tailwind-merge": "^3.4.0",
     "tsx": "^4.20.6",
-    "twilio": "^5.10.6",
     "zod": "^4.1.13"
   }
 }
