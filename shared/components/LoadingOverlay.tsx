@@ -4,18 +4,14 @@ interface LoadingOverlayProps {
 }
 
 export function LoadingOverlay({
-  message = "Processing...",
-  submessage = "Please wait",
+  message = 'Processing...',
+  submessage = 'Please wait',
 }: LoadingOverlayProps) {
   return (
     <div class="fixed inset-0 bg-white/80 loading-overlay z-50 flex items-center justify-center">
       <div class="text-center">
         <div class="w-16 h-16 mx-auto mb-4">
-          <svg
-            class="animate-spin text-primary-500"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
+          <svg class="animate-spin text-primary-500" viewBox="0 0 24 24" fill="none">
             <circle
               class="opacity-25"
               cx="12"

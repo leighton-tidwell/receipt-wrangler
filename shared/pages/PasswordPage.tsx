@@ -1,12 +1,12 @@
-import { useState } from "preact/hooks";
-import { LoadingOverlay } from "../components/LoadingOverlay";
-import { PageLayout } from "../components/ui/PageLayout";
-import { PageHeader } from "../components/ui/PageHeader";
-import { Card } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
-import { Alert } from "../components/ui/Alert";
-import { Icon } from "../components/ui/Icon";
+import { useState } from 'preact/hooks';
+import { LoadingOverlay } from '../components/LoadingOverlay';
+import { PageLayout } from '../components/ui/PageLayout';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { Icon } from '../components/ui/Icon';
 
 interface PasswordPageProps {
   error?: string;
@@ -14,7 +14,7 @@ interface PasswordPageProps {
 
 export function PasswordPage({ error }: PasswordPageProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: Event) => {
     if (!password.trim()) {
@@ -26,15 +26,9 @@ export function PasswordPage({ error }: PasswordPageProps) {
 
   return (
     <PageLayout centered maxWidth="sm">
-      {isLoading && (
-        <LoadingOverlay message="Verifying..." submessage="Please wait" />
-      )}
+      {isLoading && <LoadingOverlay message="Verifying..." submessage="Please wait" />}
 
-      <PageHeader
-        icon="receipt"
-        title="Receipt Wrangler"
-        subtitle="Enter password to continue"
-      />
+      <PageHeader icon="receipt" title="Receipt Wrangler" subtitle="Enter password to continue" />
 
       {error && (
         <Alert variant="error" class="mb-6 animate-fade-in">
@@ -42,12 +36,7 @@ export function PasswordPage({ error }: PasswordPageProps) {
         </Alert>
       )}
 
-      <form
-        method="POST"
-        action="/auth"
-        onSubmit={handleSubmit}
-        class="animate-slide-up"
-      >
+      <form method="POST" action="/auth" onSubmit={handleSubmit} class="animate-slide-up">
         <Card class="mb-4">
           <Input
             type="password"

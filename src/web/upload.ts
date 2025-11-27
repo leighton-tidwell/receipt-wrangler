@@ -1,18 +1,18 @@
-import type { Request, Response, NextFunction, RequestHandler } from "express";
-import crypto from "crypto";
-import multer from "multer";
-import { config } from "../config.js";
-import { processReceipt } from "../agent/index.js";
-import { sendToReceiver } from "../twilio/send.js";
-import { formatFinalSummary } from "../utils/format.js";
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import crypto from 'crypto';
+import multer from 'multer';
+import { config } from '../config.js';
+import { processReceipt } from '../agent/index.js';
+import { sendToReceiver } from '../twilio/send.js';
+import { formatFinalSummary } from '../utils/format.js';
 import {
   passwordPage,
   uploadPage,
   reviewPage,
   donePage,
   processingErrorPage,
-} from "./templates.js";
-import type { ParsedReceipt } from "../state/conversation.js";
+} from './templates.js';
+import type { ParsedReceipt } from '../state/conversation.js';
 
 // Configure multer for memory storage
 const upload = multer({
@@ -20,14 +20,14 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
-export const uploadMiddleware: RequestHandler = upload.array("images", 10) as RequestHandler;
+export const uploadMiddleware: RequestHandler = upload.array('images', 10) as RequestHandler;
 
 // Session management
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 const sessions = new Map<string, number>(); // token -> expiration timestamp
 
 function createSession(): string {
-  const token = crypto.randomBytes(32).toString("hex");
+  const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   sessions.set(token, expiresAt);
   return token;
@@ -49,16 +49,16 @@ function checkPassword(password: string): boolean {
 }
 
 function setSessionCookie(res: Response, token: string): void {
-  res.cookie("session", token, {
+  res.cookie('session', token, {
     httpOnly: true,
     maxAge: SESSION_DURATION_MS,
-    sameSite: "strict",
+    sameSite: 'strict',
   });
 }
 
 function hasValidSession(req: Request): boolean {
   // Skip auth in dev mode
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== 'production') {
     return true;
   }
   return isValidSession(req.cookies?.session);
@@ -78,13 +78,13 @@ export function postAuth(req: Request, res: Response): void {
   const { password } = req.body;
 
   if (!checkPassword(password)) {
-    res.send(passwordPage("Invalid password"));
+    res.send(passwordPage('Invalid password'));
     return;
   }
 
   const token = createSession();
   setSessionCookie(res, token);
-  res.redirect("/upload");
+  res.redirect('/upload');
 }
 
 // POST /upload - Process receipt
@@ -94,7 +94,7 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
 
   // Check for valid session
   if (!hasValidSession(req)) {
-    res.send(passwordPage("Session expired. Please log in again."));
+    res.send(passwordPage('Session expired. Please log in again.'));
     return;
   }
 
@@ -103,7 +103,7 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
 
   // Check for at least one input
   if (!hasFiles && !hasText) {
-    res.send(uploadPage("Please upload an image or paste receipt text"));
+    res.send(uploadPage('Please upload an image or paste receipt text'));
     return;
   }
 
@@ -111,20 +111,22 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
     // Convert files to base64 data URLs for the AI
     const imageDataUrls = hasFiles
       ? files.map((file) => {
-          const base64 = file.buffer.toString("base64");
+          const base64 = file.buffer.toString('base64');
           return `data:${file.mimetype};base64,${base64}`;
         })
       : [];
 
     // Store base64 for reprocessing (without the data URL prefix)
-    const imageData = hasFiles ? files.map((file) => file.buffer.toString("base64")) : [];
+    const imageData = hasFiles ? files.map((file) => file.buffer.toString('base64')) : [];
     const mimeTypes = hasFiles ? files.map((file) => file.mimetype) : [];
 
     // Process receipt - pass text as content if no images, otherwise as guidance
     const result = await processReceipt(
       imageDataUrls,
       hasFiles ? null : receiptText,
-      hasFiles ? [receiptText, instructions].filter(Boolean).join("\n\n") || null : instructions || null
+      hasFiles
+        ? [receiptText, instructions].filter(Boolean).join('\n\n') || null
+        : instructions || null
     );
 
     if (result.error) {
@@ -135,15 +137,16 @@ export async function postUpload(req: Request, res: Response): Promise<void> {
     if (result.parsedReceipt) {
       // Encode image data with mime types for reprocessing
       const encodedImages = imageData.map((data, i) => `${mimeTypes[i]}|${data}`);
-      const combinedInstructions = [receiptText, instructions].filter(Boolean).join("\n\n") || undefined;
+      const combinedInstructions =
+        [receiptText, instructions].filter(Boolean).join('\n\n') || undefined;
       res.send(reviewPage(result.parsedReceipt, encodedImages, combinedInstructions, receiptText));
       return;
     }
 
-    res.send(processingErrorPage("Unknown error processing receipt"));
+    res.send(processingErrorPage('Unknown error processing receipt'));
   } catch (error) {
-    console.error("Error in postUpload:", error);
-    res.send(processingErrorPage("An error occurred. Please try again."));
+    console.error('Error in postUpload:', error);
+    res.send(processingErrorPage('An error occurred. Please try again.'));
   }
 }
 
@@ -153,7 +156,7 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
 
   // Check for valid session
   if (!hasValidSession(req)) {
-    res.send(passwordPage("Session expired. Please log in again."));
+    res.send(passwordPage('Session expired. Please log in again.'));
     return;
   }
 
@@ -167,7 +170,7 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
       const encoded = req.body[`imageData${i}`];
       if (encoded) {
         encodedImages.push(encoded);
-        const [mimeType, base64] = encoded.split("|");
+        const [mimeType, base64] = encoded.split('|');
         imageDataUrls.push(`data:${mimeType};base64,${base64}`);
       }
     }
@@ -177,7 +180,7 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
     // Combine previous instructions with corrections
     const combinedInstructions = [previousInstructions, corrections]
       .filter(Boolean)
-      .join("\n\nAdditional corrections: ");
+      .join('\n\nAdditional corrections: ');
 
     // Process receipt - use receiptText as content if no images
     const result = await processReceipt(
@@ -196,10 +199,10 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    res.send(processingErrorPage("Unknown error processing receipt"));
+    res.send(processingErrorPage('Unknown error processing receipt'));
   } catch (error) {
-    console.error("Error in postReprocess:", error);
-    res.send(processingErrorPage("An error occurred. Please try again."));
+    console.error('Error in postReprocess:', error);
+    res.send(processingErrorPage('An error occurred. Please try again.'));
   }
 }
 
@@ -209,7 +212,7 @@ export async function postConfirm(req: Request, res: Response): Promise<void> {
 
   // Check for valid session
   if (!hasValidSession(req)) {
-    res.send(passwordPage("Session expired. Please log in again."));
+    res.send(passwordPage('Session expired. Please log in again.'));
     return;
   }
 
@@ -221,12 +224,12 @@ export async function postConfirm(req: Request, res: Response): Promise<void> {
     try {
       await sendToReceiver(summary);
     } catch (smsError) {
-      console.error("SMS send failed (A2P may not be approved yet):", smsError);
+      console.error('SMS send failed (A2P may not be approved yet):', smsError);
     }
 
     res.send(donePage(parsedReceipt));
   } catch (error) {
-    console.error("Error in postConfirm:", error);
-    res.send(processingErrorPage("Failed to process. Please try again."));
+    console.error('Error in postConfirm:', error);
+    res.send(processingErrorPage('Failed to process. Please try again.'));
   }
 }

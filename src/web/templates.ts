@@ -1,13 +1,13 @@
-import type { ParsedReceipt } from "../state/conversation.js";
-import { readFileSync, existsSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { renderAppToString } from "./ssr.js";
+import type { ParsedReceipt } from '../state/conversation.js';
+import { readFileSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { renderAppToString } from './ssr.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 interface PageData {
-  page: "password" | "upload" | "review" | "done" | "error";
+  page: 'password' | 'upload' | 'review' | 'done' | 'error';
   error?: string;
   receipt?: ParsedReceipt;
   imageData?: string[];
@@ -17,13 +17,13 @@ interface PageData {
 
 function escapeForScript(str: string): string {
   return str
-    .replace(/\\/g, "\\\\")
+    .replace(/\\/g, '\\\\')
     .replace(/'/g, "\\'")
     .replace(/"/g, '\\"')
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "\\r");
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
 }
 
 function getDevHtml(): string {
@@ -45,15 +45,15 @@ function getDevHtml(): string {
 
 function getClientHtml(): string {
   // In development, always use dev HTML with Vite HMR
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== 'production') {
     return getDevHtml();
   }
 
   // In production, read the built client index.html
-  const clientDistPath = join(__dirname, "../../dist/client/index.html");
+  const clientDistPath = join(__dirname, '../../dist/client/index.html');
 
   if (existsSync(clientDistPath)) {
-    return readFileSync(clientDistPath, "utf-8");
+    return readFileSync(clientDistPath, 'utf-8');
   }
 
   // Fallback to dev HTML if no build exists
@@ -65,7 +65,7 @@ function renderPage(pageData: PageData): string {
 
   // Inject page data before the closing </head> tag for client hydration
   const pageDataScript = `<script>window.__PAGE_DATA__ = ${JSON.stringify(pageData)};</script>`;
-  html = html.replace("</head>", `${pageDataScript}</head>`);
+  html = html.replace('</head>', `${pageDataScript}</head>`);
 
   // SSR: Pre-render the app HTML on the server (both dev and production)
   const appHtml = renderAppToString(pageData);
@@ -76,14 +76,14 @@ function renderPage(pageData: PageData): string {
 
 export function passwordPage(error?: string): string {
   return renderPage({
-    page: "password",
+    page: 'password',
     error,
   });
 }
 
 export function uploadPage(error?: string): string {
   return renderPage({
-    page: "upload",
+    page: 'upload',
     error,
   });
 }
@@ -96,7 +96,7 @@ export function reviewPage(
   error?: string
 ): string {
   return renderPage({
-    page: "review",
+    page: 'review',
     receipt,
     imageData,
     previousInstructions,
@@ -107,14 +107,14 @@ export function reviewPage(
 
 export function donePage(receipt: ParsedReceipt): string {
   return renderPage({
-    page: "done",
+    page: 'done',
     receipt,
   });
 }
 
 export function processingErrorPage(error: string): string {
   return renderPage({
-    page: "error",
+    page: 'error',
     error,
   });
 }

@@ -1,9 +1,9 @@
-import express from "express";
-import cookieParser from "cookie-parser";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { config } from "./config.js";
-import { handleIncomingSms } from "./twilio/webhook.js";
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { config } from './config.js';
+import { handleIncomingSms } from './twilio/webhook.js';
 import {
   getUploadPage,
   postAuth,
@@ -11,35 +11,37 @@ import {
   postReprocess,
   postConfirm,
   uploadMiddleware,
-} from "./web/upload.js";
+} from './web/upload.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // Parse URL-encoded bodies (Twilio sends form data)
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 
 // Serve static files from built client (JS, CSS, etc.)
-app.use(express.static(join(__dirname, "../dist/client"), {
-  index: false, // Don't serve index.html automatically - we handle routing
-}));
+app.use(
+  express.static(join(__dirname, '../dist/client'), {
+    index: false, // Don't serve index.html automatically - we handle routing
+  })
+);
 
 // Health check endpoint
-app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "ok" });
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 // Twilio webhook endpoint
-app.post("/webhook/sms", handleIncomingSms);
+app.post('/webhook/sms', handleIncomingSms);
 
 // Web upload endpoints
-app.get("/upload", getUploadPage);
-app.post("/auth", postAuth);
-app.post("/upload", uploadMiddleware, postUpload);
-app.post("/upload/reprocess", postReprocess);
-app.post("/upload/confirm", postConfirm);
+app.get('/upload', getUploadPage);
+app.post('/auth', postAuth);
+app.post('/upload', uploadMiddleware, postUpload);
+app.post('/upload/reprocess', postReprocess);
+app.post('/upload/confirm', postConfirm);
 
 // Start server
 app.listen(config.port, () => {

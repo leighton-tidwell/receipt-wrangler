@@ -1,8 +1,8 @@
-import { PageLayout } from "../components/ui/PageLayout";
-import { PageHeader } from "../components/ui/PageHeader";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
-import { Icon } from "../components/ui/Icon";
+import { PageLayout } from '../components/ui/PageLayout';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Icon } from '../components/ui/Icon';
 
 interface ErrorPageProps {
   error: string;
@@ -11,11 +11,7 @@ interface ErrorPageProps {
 export function ErrorPage({ error }: ErrorPageProps) {
   return (
     <PageLayout centered>
-      <PageHeader
-        icon="error"
-        iconVariant="error"
-        title="Something went wrong"
-      />
+      <PageHeader icon="error" iconVariant="error" title="Something went wrong" />
 
       <Card class="mb-6 animate-slide-up">
         <div class="flex items-start gap-3">

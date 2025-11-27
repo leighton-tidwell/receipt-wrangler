@@ -1,9 +1,9 @@
-import { PasswordPage } from "./pages/PasswordPage";
-import { UploadPage } from "./pages/UploadPage";
-import { ReviewPage } from "./pages/ReviewPage";
-import { DonePage } from "./pages/DonePage";
-import { ErrorPage } from "./pages/ErrorPage";
-import type { PageData } from "./types";
+import { PasswordPage } from './pages/PasswordPage';
+import { UploadPage } from './pages/UploadPage';
+import { ReviewPage } from './pages/ReviewPage';
+import { DonePage } from './pages/DonePage';
+import { ErrorPage } from './pages/ErrorPage';
+import type { PageData } from './types';
 
 interface AppProps {
   pageData: PageData;
@@ -11,11 +11,11 @@ interface AppProps {
 
 export function App({ pageData }: AppProps) {
   switch (pageData.page) {
-    case "password":
+    case 'password':
       return <PasswordPage error={pageData.error} />;
-    case "upload":
+    case 'upload':
       return <UploadPage error={pageData.error} />;
-    case "review":
+    case 'review':
       return (
         <ReviewPage
           receipt={pageData.receipt!}
@@ -25,10 +25,10 @@ export function App({ pageData }: AppProps) {
           error={pageData.error}
         />
       );
-    case "done":
+    case 'done':
       return <DonePage receipt={pageData.receipt!} />;
-    case "error":
-      return <ErrorPage error={pageData.error || "An error occurred"} />;
+    case 'error':
+      return <ErrorPage error={pageData.error || 'An error occurred'} />;
     default:
       return <PasswordPage error={pageData.error} />;
   }

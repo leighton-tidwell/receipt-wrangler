@@ -1,6 +1,6 @@
-import { useRef } from "preact/hooks";
-import { cn } from "../../lib/cn";
-import { Icon } from "../ui/Icon";
+import { useRef } from 'preact/hooks';
+import { cn } from '../../lib/cn';
+import { Icon } from '../ui/Icon';
 
 interface FileDropZoneProps {
   files: File[];
@@ -20,9 +20,9 @@ export function FileDropZone({
   const handleDrag = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       onDragActiveChange(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       onDragActiveChange(false);
     }
   };
@@ -32,9 +32,7 @@ export function FileDropZone({
     e.stopPropagation();
     onDragActiveChange(false);
     if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-      const newFiles = Array.from(e.dataTransfer.files).filter((f) =>
-        f.type.startsWith("image/")
-      );
+      const newFiles = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
       const updatedFiles = [...files, ...newFiles];
       onFilesChange(updatedFiles);
       if (fileInputRef.current) {
@@ -66,10 +64,10 @@ export function FileDropZone({
     <>
       <div
         class={cn(
-          "relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer",
+          'relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer',
           dragActive
-            ? "border-primary-500 bg-primary-50"
-            : "border-slate-200 hover:border-slate-300"
+            ? 'border-primary-500 bg-primary-50'
+            : 'border-slate-200 hover:border-slate-300'
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -94,10 +92,7 @@ export function FileDropZone({
       {files.length > 0 && (
         <div class="mt-4 space-y-2">
           {files.map((file, i) => (
-            <div
-              key={i}
-              class="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-            >
+            <div key={i} class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
               <div class="flex items-center gap-3 min-w-0">
                 <Icon name="image" class="w-5 h-5 text-primary-500 flex-shrink-0" />
                 <span class="text-sm text-slate-600 truncate">{file.name}</span>

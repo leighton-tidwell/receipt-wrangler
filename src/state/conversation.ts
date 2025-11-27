@@ -1,7 +1,4 @@
-export type ConversationState =
-  | "IDLE"
-  | "PROCESSING"
-  | "AWAITING_CONFIRM";
+export type ConversationState = 'IDLE' | 'PROCESSING' | 'AWAITING_CONFIRM';
 
 export interface ReceiptItem {
   name: string;
@@ -47,7 +44,7 @@ export interface ConversationData {
 
 // In-memory store - one conversation at a time
 let conversation: ConversationData = {
-  state: "IDLE",
+  state: 'IDLE',
   pendingImages: [],
   parsedReceipt: null,
   userGuidance: null,
@@ -69,7 +66,7 @@ export function updateConversation(updates: Partial<ConversationData>): void {
 
 export function resetConversation(): void {
   conversation = {
-    state: "IDLE",
+    state: 'IDLE',
     pendingImages: [],
     parsedReceipt: null,
     userGuidance: null,

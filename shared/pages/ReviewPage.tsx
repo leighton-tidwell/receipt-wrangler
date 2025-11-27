@@ -1,14 +1,14 @@
-import { useState } from "preact/hooks";
-import { LoadingOverlay } from "../components/LoadingOverlay";
-import { PageLayout } from "../components/ui/PageLayout";
-import { Alert } from "../components/ui/Alert";
-import { Button } from "../components/ui/Button";
-import { Icon } from "../components/ui/Icon";
-import { ReceiptHeader } from "../components/receipt/ReceiptHeader";
-import { CategoryBreakdownList } from "../components/receipt/CategoryBreakdownList";
-import { ReceiptSummary } from "../components/receipt/ReceiptSummary";
-import { CorrectionForm } from "../components/receipt/CorrectionForm";
-import type { ParsedReceipt } from "../types";
+import { useState } from 'preact/hooks';
+import { LoadingOverlay } from '../components/LoadingOverlay';
+import { PageLayout } from '../components/ui/PageLayout';
+import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
+import { Icon } from '../components/ui/Icon';
+import { ReceiptHeader } from '../components/receipt/ReceiptHeader';
+import { CategoryBreakdownList } from '../components/receipt/CategoryBreakdownList';
+import { ReceiptSummary } from '../components/receipt/ReceiptSummary';
+import { CorrectionForm } from '../components/receipt/CorrectionForm';
+import type { ParsedReceipt } from '../types';
 
 interface ReviewPageProps {
   receipt: ParsedReceipt;
@@ -27,7 +27,7 @@ export function ReviewPage({
 }: ReviewPageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [corrections, setCorrections] = useState("");
+  const [corrections, setCorrections] = useState('');
 
   let subtotal = 0;
   let totalFees = 0;
@@ -51,16 +51,13 @@ export function ReviewPage({
     <PageLayout>
       {(isProcessing || isSending) && (
         <LoadingOverlay
-          message={isProcessing ? "Reprocessing..." : "Sending..."}
+          message={isProcessing ? 'Reprocessing...' : 'Sending...'}
           submessage="Please wait"
         />
       )}
 
       <div class="flex items-center gap-3 mb-6 animate-fade-in">
-        <a
-          href="/upload"
-          class="p-2 -ml-2 text-slate-400 hover:text-slate-600 transition-colors"
-        >
+        <a href="/upload" class="p-2 -ml-2 text-slate-400 hover:text-slate-600 transition-colors">
           <Icon name="chevronLeft" class="w-6 h-6" />
         </a>
         <h1 class="text-xl font-bold text-slate-800">Review Breakdown</h1>
@@ -76,23 +73,21 @@ export function ReviewPage({
         <Alert variant="warning" class="mb-6 animate-fade-in">
           {receipt.hasUnclearItems && receipt.hasMissingItems ? (
             <p>
-              <strong>Attention needed:</strong> Some items couldn't be read
-              clearly, and there appear to be missing items from the receipt.
-              Please review the "Unknown" category and provide corrections if
-              needed.
+              <strong>Attention needed:</strong> Some items couldn't be read clearly, and there
+              appear to be missing items from the receipt. Please review the "Unknown" category and
+              provide corrections if needed.
             </p>
           ) : receipt.hasUnclearItems ? (
             <p>
-              <strong>Unclear items detected:</strong> Some items couldn't be
-              read clearly from the receipt. They've been added to the "Unknown"
-              category. Please review and provide corrections if needed.
+              <strong>Unclear items detected:</strong> Some items couldn't be read clearly from the
+              receipt. They've been added to the "Unknown" category. Please review and provide
+              corrections if needed.
             </p>
           ) : (
             <p>
-              <strong>Missing items detected:</strong> The itemized total
-              doesn't match the receipt total. Missing items have been added to
-              the "Unknown" category. Please review or provide additional
-              receipt details.
+              <strong>Missing items detected:</strong> The itemized total doesn't match the receipt
+              total. Missing items have been added to the "Unknown" category. Please review or
+              provide additional receipt details.
             </p>
           )}
         </Alert>

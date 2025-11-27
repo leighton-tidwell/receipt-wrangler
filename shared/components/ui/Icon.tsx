@@ -29,12 +29,7 @@ const icons = {
     />
   ),
   check: (
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M5 13l4 4L19 7"
-    />
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
   ),
   lock: (
     <path
@@ -45,12 +40,7 @@ const icons = {
     />
   ),
   arrowRight: (
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M9 5l7 7-7 7"
-    />
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
   ),
   arrowLeft: (
     <path
@@ -61,21 +51,9 @@ const icons = {
     />
   ),
   chevronLeft: (
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M15 19l-7-7 7-7"
-    />
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
   ),
-  plus: (
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 4v16m8-8H4"
-    />
-  ),
+  plus: <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />,
   x: (
     <path
       stroke-linecap="round"
@@ -167,14 +145,9 @@ const icons = {
   ),
 };
 
-export function Icon({ name, class: className = "w-5 h-5" }: IconProps) {
+export function Icon({ name, class: className = 'w-5 h-5' }: IconProps) {
   return (
-    <svg
-      class={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg class={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       {icons[name]}
     </svg>
   );

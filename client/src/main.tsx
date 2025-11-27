@@ -1,7 +1,7 @@
-import { hydrate, render } from "preact";
-import { App } from "@shared/App";
-import type { PageData } from "@shared/types";
-import "./index.css";
+import { hydrate, render } from 'preact';
+import { App } from '@shared/App';
+import type { PageData } from '@shared/types';
+import './index.css';
 
 declare global {
   interface Window {
@@ -9,8 +9,8 @@ declare global {
   }
 }
 
-const container = document.getElementById("app")!;
-const pageData: PageData = window.__PAGE_DATA__ || { page: "password" };
+const container = document.getElementById('app')!;
+const pageData: PageData = window.__PAGE_DATA__ || { page: 'password' };
 
 // If SSR'd content exists (has children), hydrate; otherwise render fresh
 if (container.children.length > 0) {

@@ -1,6 +1,6 @@
-import { Card } from "../ui/Card";
-import { TextArea } from "../ui/TextArea";
-import { Button } from "../ui/Button";
+import { Card } from '../ui/Card';
+import { TextArea } from '../ui/TextArea';
+import { Button } from '../ui/Button';
 
 interface CorrectionFormProps {
   imageData: string[];
@@ -28,33 +28,18 @@ export function CorrectionForm({
         {imageData.map((img, i) => (
           <input key={i} type="hidden" name={`imageData${i}`} value={img} />
         ))}
-        <input
-          type="hidden"
-          name="imageCount"
-          value={imageData.length.toString()}
-        />
-        <input
-          type="hidden"
-          name="previousInstructions"
-          value={previousInstructions || ""}
-        />
-        <input type="hidden" name="receiptText" value={receiptText || ""} />
+        <input type="hidden" name="imageCount" value={imageData.length.toString()} />
+        <input type="hidden" name="previousInstructions" value={previousInstructions || ''} />
+        <input type="hidden" name="receiptText" value={receiptText || ''} />
         <TextArea
           name="corrections"
           value={corrections}
-          onInput={(e) =>
-            onCorrectionsChange((e.target as HTMLTextAreaElement).value)
-          }
+          onInput={(e) => onCorrectionsChange((e.target as HTMLTextAreaElement).value)}
           rows={2}
           placeholder="e.g., Move apples to baby supplies"
           class="mb-3 text-sm"
         />
-        <Button
-          type="submit"
-          variant="secondary"
-          size="md"
-          disabled={isProcessing}
-        >
+        <Button type="submit" variant="secondary" size="md" disabled={isProcessing}>
           Reprocess with Corrections
         </Button>
       </form>

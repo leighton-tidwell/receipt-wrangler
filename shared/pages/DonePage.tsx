@@ -1,12 +1,12 @@
-import { useState } from "preact/hooks";
-import { PageLayout } from "../components/ui/PageLayout";
-import { PageHeader } from "../components/ui/PageHeader";
-import { Card, CardHeader, CardFooter } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
-import { Icon } from "../components/ui/Icon";
-import { CategoryBreakdownList } from "../components/receipt/CategoryBreakdownList";
-import { formatMoney, getCategoryLabel } from "../utils";
-import type { ParsedReceipt } from "../types";
+import { useState } from 'preact/hooks';
+import { PageLayout } from '../components/ui/PageLayout';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Card, CardHeader, CardFooter } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Icon } from '../components/ui/Icon';
+import { CategoryBreakdownList } from '../components/receipt/CategoryBreakdownList';
+import { formatMoney, getCategoryLabel } from '../utils';
+import type { ParsedReceipt } from '../types';
 
 interface DonePageProps {
   receipt: ParsedReceipt;
@@ -26,7 +26,7 @@ export function DonePage({ receipt }: DonePageProps) {
   const total = subtotal + totalFees + totalTax;
 
   const buildSummaryText = () => {
-    const lines: string[] = [`${receipt.storeName} - ${receipt.date}`, ""];
+    const lines: string[] = [`${receipt.storeName} - ${receipt.date}`, ''];
 
     for (const [key, breakdown] of Object.entries(receipt.categories)) {
       if (breakdown.items.length === 0) continue;
@@ -34,7 +34,7 @@ export function DonePage({ receipt }: DonePageProps) {
       const fees = breakdown.fees || 0;
       const extras = breakdown.tax + fees;
       if (extras > 0) {
-        const extrasLabel = fees > 0 ? "tax/fees" : "tax";
+        const extrasLabel = fees > 0 ? 'tax/fees' : 'tax';
         lines.push(
           `${label}: ${formatMoney(breakdown.total)} (incl. ${formatMoney(extras)} ${extrasLabel})`
         );
@@ -43,10 +43,10 @@ export function DonePage({ receipt }: DonePageProps) {
       }
     }
 
-    lines.push("");
+    lines.push('');
     lines.push(`Total: ${formatMoney(total)}`);
 
-    return lines.join("\n");
+    return lines.join('\n');
   };
 
   const copyToClipboard = () => {
@@ -76,9 +76,7 @@ export function DonePage({ receipt }: DonePageProps) {
         <CardFooter>
           <div class="flex items-center justify-between">
             <span class="font-semibold text-slate-800">Total</span>
-            <span class="font-bold text-slate-800 text-xl">
-              {formatMoney(total)}
-            </span>
+            <span class="font-bold text-slate-800 text-xl">{formatMoney(total)}</span>
           </div>
         </CardFooter>
       </Card>
@@ -91,8 +89,8 @@ export function DonePage({ receipt }: DonePageProps) {
           class="flex-1"
           fullWidth={false}
         >
-          <Icon name={copied ? "check" : "copy"} class={copied ? "text-primary-500" : ""} />
-          {copied ? "Copied!" : "Copy"}
+          <Icon name={copied ? 'check' : 'copy'} class={copied ? 'text-primary-500' : ''} />
+          {copied ? 'Copied!' : 'Copy'}
         </Button>
         <a href="/upload" class="flex-1">
           <Button size="md">

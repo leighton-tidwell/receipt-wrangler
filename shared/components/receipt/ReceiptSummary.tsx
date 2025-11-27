@@ -1,5 +1,5 @@
-import { Card } from "../ui/Card";
-import { formatMoney } from "../../utils";
+import { Card } from '../ui/Card';
+import { formatMoney } from '../../utils';
 
 interface ReceiptSummaryProps {
   subtotal: number;
@@ -41,22 +41,16 @@ export function ReceiptSummary({
         )}
         <div class="flex justify-between pt-2 border-t border-slate-100">
           <span class="font-semibold text-slate-800">Total</span>
-          <span class="font-bold text-slate-800 text-lg">
-            {formatMoney(total)}
-          </span>
+          <span class="font-bold text-slate-800 text-lg">{formatMoney(total)}</span>
         </div>
         {hasMismatch && (
           <div class="flex justify-between text-sm pt-2">
             <span class="text-amber-600">Original Receipt</span>
-            <span class="text-amber-600 font-medium">
-              {formatMoney(originalTotal)}
-            </span>
+            <span class="text-amber-600 font-medium">{formatMoney(originalTotal)}</span>
           </div>
         )}
       </div>
-      {showTaxNote && totalTax > 0 && (
-        <p class="text-xs text-slate-400 mt-3">* Taxable items</p>
-      )}
+      {showTaxNote && totalTax > 0 && <p class="text-xs text-slate-400 mt-3">* Taxable items</p>}
     </Card>
   );
 }
