@@ -22,6 +22,9 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 
+// Serve static files from /public (icons, manifest, etc.)
+app.use(express.static(join(__dirname, '../public')));
+
 // Serve static files from built client (JS, CSS, etc.)
 app.use(
   express.static(join(__dirname, '../dist/client'), {

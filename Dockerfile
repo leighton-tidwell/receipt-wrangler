@@ -36,6 +36,9 @@ COPY --from=build /app/tsconfig.json ./
 # Copy built client assets
 COPY --from=build /app/dist/client ./dist/client
 
+# Copy public static assets (icons, manifest, etc.)
+COPY --from=build /app/public ./public
+
 EXPOSE 3000
 
 CMD ["pnpm", "start"]

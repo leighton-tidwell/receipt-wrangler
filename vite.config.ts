@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(({ mode }) => ({
   root: 'client',
+  publicDir: '../public',
   plugins: [
     preact(
       mode === 'development'
@@ -35,6 +36,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   server: {
+    origin: 'http://localhost:5173',
     proxy: {
       '/api': 'http://localhost:3000',
       '/upload': 'http://localhost:3000',
