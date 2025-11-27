@@ -5,9 +5,11 @@ import { DonePage } from "./pages/DonePage";
 import { ErrorPage } from "./pages/ErrorPage";
 import type { PageData } from "./types";
 
-export function App() {
-  const pageData: PageData = window.__PAGE_DATA__ || { page: "password" };
+interface AppProps {
+  pageData: PageData;
+}
 
+export function App({ pageData }: AppProps) {
   switch (pageData.page) {
     case "password":
       return <PasswordPage error={pageData.error} />;

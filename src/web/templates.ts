@@ -2,6 +2,7 @@ import type { ParsedReceipt } from "../state/conversation.js";
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { renderAppToString } from "./ssr.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -31,10 +32,8 @@ function getDevHtml(): string {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>Receipt Wrangler</title>
+    <link rel="stylesheet" href="http://localhost:5173/src/index.css" />
   </head>
   <body>
     <div id="app"></div>
@@ -64,11 +63,13 @@ function getClientHtml(): string {
 function renderPage(pageData: PageData): string {
   let html = getClientHtml();
 
-  // Inject page data before the closing </head> tag
+  // Inject page data before the closing </head> tag for client hydration
   const pageDataScript = `<script>window.__PAGE_DATA__ = ${JSON.stringify(pageData)};</script>`;
-
-  // Insert the script before </head>
   html = html.replace("</head>", `${pageDataScript}</head>`);
+
+  // SSR: Pre-render the app HTML on the server (both dev and production)
+  const appHtml = renderAppToString(pageData);
+  html = html.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`);
 
   return html;
 }

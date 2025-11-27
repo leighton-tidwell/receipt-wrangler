@@ -10,9 +10,9 @@ COPY package.json pnpm-lock.yaml ./
 
 # Install server dependencies
 FROM base AS deps
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --force
 
-# Build
+# Build client
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -22,10 +22,18 @@ RUN pnpm build
 FROM base AS runner
 ENV NODE_ENV=production
 
+# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
+
+# Copy source files (tsx runs source directly)
+COPY --from=build /app/src ./src
+COPY --from=build /app/shared ./shared
 COPY --from=build /app/package.json ./
+COPY --from=build /app/tsconfig.json ./
+
+# Copy built client assets
+COPY --from=build /app/dist/client ./dist/client
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["pnpm", "start"]

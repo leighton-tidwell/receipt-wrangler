@@ -30,9 +30,3 @@ export interface PageData {
   previousInstructions?: string;
   receiptText?: string;
 }
-
-declare global {
-  interface Window {
-    __PAGE_DATA__?: PageData;
-  }
-}

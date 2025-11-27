@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "preact": "^10.19.3",
