@@ -57,6 +57,10 @@ function setSessionCookie(res: Response, token: string): void {
 }
 
 function hasValidSession(req: Request): boolean {
+  // Skip auth in dev mode
+  if (process.env.NODE_ENV !== "production") {
+    return true;
+  }
   return isValidSession(req.cookies?.session);
 }
 
