@@ -3,7 +3,7 @@ import crypto from "crypto";
 import multer from "multer";
 import { config } from "../config.js";
 import { processReceipt } from "../agent/index.js";
-import { sendToHusband } from "../twilio/send.js";
+import { sendToReceiver } from "../twilio/send.js";
 import { formatFinalSummary } from "../utils/format.js";
 import {
   passwordPage,
@@ -203,7 +203,7 @@ export async function postReprocess(req: Request, res: Response): Promise<void> 
   }
 }
 
-// POST /upload/confirm - Send to husband
+// POST /upload/confirm - Send to receiver
 export async function postConfirm(req: Request, res: Response): Promise<void> {
   const { receipt } = req.body;
 
@@ -219,7 +219,7 @@ export async function postConfirm(req: Request, res: Response): Promise<void> {
 
     // Try to send SMS, but don't fail if it doesn't work
     try {
-      await sendToHusband(summary);
+      await sendToReceiver(summary);
     } catch (smsError) {
       console.error("SMS send failed (A2P may not be approved yet):", smsError);
     }
