@@ -1,7 +1,9 @@
 FROM node:22-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+ENV CI=true
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
@@ -10,7 +12,7 @@ COPY package.json pnpm-lock.yaml ./
 
 # Install server dependencies
 FROM base AS deps
-RUN pnpm install --frozen-lockfile --force
+RUN pnpm install --frozen-lockfile
 
 # Build client
 FROM base AS build

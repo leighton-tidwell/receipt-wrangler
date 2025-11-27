@@ -9,7 +9,7 @@
     "dev:server": "NODE_ENV=development tsx watch src/index.ts",
     "dev:client": "cd client && pnpm dev",
     "build": "pnpm build:client",
-    "build:client": "cd client && pnpm install --force && pnpm build",
+    "build:client": "cd client && pnpm install && pnpm build",
     "typecheck": "tsc --noEmit",
     "start": "NODE_ENV=production tsx src/index.ts"
   },
