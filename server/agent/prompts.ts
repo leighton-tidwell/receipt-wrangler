@@ -16,6 +16,8 @@ export const SYSTEM_PROMPT = `You are a receipt categorization assistant for a f
 
 **pharmacy**: Medications (OTC and prescription), vitamins, first aid supplies, health items (Benadryl, Mucinex, Tylenol, etc.)
 
+**clothing**: Adult and general clothing items (shirts, pants, shoes, socks, jackets). NOT baby/children's clothing - those go in babySupplies.
+
 **charity**: Round-up donations, charitable contributions shown on receipt
 
 **unknown**: Items that couldn't be clearly read OR missing items that account for total discrepancy
@@ -40,6 +42,12 @@ BATHROOM SUPPLIES:
 - Toothpaste, toothbrushes, mouthwash
 - Razors, shaving cream
 - Bathroom-specific cleaners
+
+CLOTHING (not baby supplies):
+- Adult clothing (shirts, pants, dresses, skirts)
+- Shoes, socks, underwear for adults
+- Jackets, coats, accessories
+- Note: Children's/baby clothing goes in babySupplies
 
 ## HANDLING UNCLEAR OR MISSING ITEMS
 
