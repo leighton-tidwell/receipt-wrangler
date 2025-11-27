@@ -95,6 +95,50 @@ export function ReviewPage({
           </div>
         )}
 
+        {(receipt.hasUnclearItems || receipt.hasMissingItems) && (
+          <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl animate-fade-in">
+            <div class="flex items-start gap-3">
+              <svg
+                class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <div class="text-amber-800 text-sm">
+                {receipt.hasUnclearItems && receipt.hasMissingItems ? (
+                  <p>
+                    <strong>Attention needed:</strong> Some items couldn't be
+                    read clearly, and there appear to be missing items from the
+                    receipt. Please review the "Unknown" category and provide
+                    corrections if needed.
+                  </p>
+                ) : receipt.hasUnclearItems ? (
+                  <p>
+                    <strong>Unclear items detected:</strong> Some items couldn't
+                    be read clearly from the receipt. They've been added to the
+                    "Unknown" category. Please review and provide corrections if
+                    needed.
+                  </p>
+                ) : (
+                  <p>
+                    <strong>Missing items detected:</strong> The itemized total
+                    doesn't match the receipt total. Missing items have been
+                    added to the "Unknown" category. Please review or provide
+                    additional receipt details.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-4 animate-slide-up">
           <div class="flex items-center justify-between mb-1">
             <h2 class="font-semibold text-slate-800">{receipt.storeName}</h2>
@@ -135,15 +179,32 @@ export function ReviewPage({
                   {breakdown.items.map((item, i) => (
                     <div
                       key={i}
-                      class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0"
+                      class={`flex justify-between items-center py-2 border-b border-slate-100 last:border-0 ${
+                        item.unclear ? "bg-amber-50 -mx-4 px-4" : ""
+                      }`}
                     >
-                      <span class="text-slate-600 text-sm">
+                      <span
+                        class={`text-sm ${
+                          item.unclear
+                            ? "text-amber-700 italic"
+                            : "text-slate-600"
+                        }`}
+                      >
                         {item.name}
                         {item.taxable && (
                           <span class="ml-1 text-xs text-slate-400">*</span>
                         )}
+                        {item.unclear && (
+                          <span class="ml-1 text-xs text-amber-500">
+                            (unclear)
+                          </span>
+                        )}
                       </span>
-                      <span class="text-slate-800 font-medium text-sm">
+                      <span
+                        class={`font-medium text-sm ${
+                          item.unclear ? "text-amber-700" : "text-slate-800"
+                        }`}
+                      >
                         {formatMoney(item.price)}
                       </span>
                     </div>
