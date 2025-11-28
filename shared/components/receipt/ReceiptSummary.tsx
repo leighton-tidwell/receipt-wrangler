@@ -7,6 +7,7 @@ interface ReceiptSummaryProps {
   totalTax: number;
   total: number;
   originalTotal?: number;
+  giftCardAmount?: number;
   showTaxNote?: boolean;
 }
 
@@ -16,9 +17,12 @@ export function ReceiptSummary({
   totalTax,
   total,
   originalTotal,
+  giftCardAmount,
   showTaxNote = true,
 }: ReceiptSummaryProps) {
-  const hasMismatch = originalTotal !== undefined && Math.abs(total - originalTotal) > 1;
+  const hasGiftCard = giftCardAmount !== undefined && giftCardAmount > 0;
+  const hasMismatch =
+    !hasGiftCard && originalTotal !== undefined && Math.abs(total - originalTotal) > 1;
 
   return (
     <Card padding="md" class="animate-slide-up mb-6">
@@ -37,6 +41,12 @@ export function ReceiptSummary({
           <div class="flex justify-between text-sm">
             <span class="text-slate-500">Tax</span>
             <span class="text-slate-700">{formatMoney(totalTax)}</span>
+          </div>
+        )}
+        {hasGiftCard && (
+          <div class="flex justify-between text-sm">
+            <span class="text-emerald-600">Gift Card</span>
+            <span class="text-emerald-600">-{formatMoney(giftCardAmount!)}</span>
           </div>
         )}
         <div class="flex justify-between border-t border-slate-100 pt-2">

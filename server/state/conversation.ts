@@ -13,6 +13,7 @@ export interface CategoryBreakdown {
   fees: number;
   tax: number;
   total: number;
+  giftCardDeduction?: number; // Amount of gift card applied to this category (in cents)
 }
 
 export interface ParsedReceipt {
@@ -33,6 +34,8 @@ export interface ParsedReceipt {
   originalTotal: number;
   hasUnclearItems?: boolean;
   hasMissingItems?: boolean;
+  giftCardAmount?: number; // Gift card payment amount in cents
+  giftCardCategory?: string; // User-specified category to apply gift card to first
 }
 
 export interface ConversationData {

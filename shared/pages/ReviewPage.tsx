@@ -104,6 +104,7 @@ export function ReviewPage({
         totalTax={totalTax}
         total={total}
         originalTotal={receipt.originalTotal}
+        giftCardAmount={receipt.giftCardAmount}
       />
 
       <CorrectionForm

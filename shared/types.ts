@@ -11,6 +11,7 @@ export interface CategoryBreakdown {
   fees: number;
   tax: number;
   total: number;
+  giftCardDeduction?: number;
 }
 
 export interface ParsedReceipt {
@@ -20,6 +21,8 @@ export interface ParsedReceipt {
   originalTotal: number;
   hasUnclearItems?: boolean;
   hasMissingItems?: boolean;
+  giftCardAmount?: number;
+  giftCardCategory?: string;
 }
 
 export interface PageData {

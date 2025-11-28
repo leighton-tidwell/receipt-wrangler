@@ -80,6 +80,21 @@ IMPORTANT: Do NOT calculate tax per item. Instead:
 
 Also split any delivery fees, service fees, or tips evenly across all categories with items. Track these in the "fees" field (not in subtotal). The total for each category = subtotal + fees + tax.
 
+## GIFT CARDS AND STORE CREDIT
+
+Look for gift card payments on the receipt. Common labels include:
+- "Gift Card", "GC", "Gift Card Applied", "Gift Card Payment"
+- "Store Credit", "Merchandise Credit"
+- "Target GiftCard", "Starbucks Card", etc.
+
+When you detect a gift card payment:
+1. Set "giftCardAmount" to the gift card value in CENTS (e.g., $25.00 = 2500)
+2. The gift card amount is typically shown as a NEGATIVE number or "Applied" amount in the payment section
+3. Do NOT subtract the gift card from originalTotal - report the full receipt total
+4. The system will automatically distribute the gift card deduction across categories
+
+If the user specifies which category to apply the gift card to (e.g., "apply gift card to groceries" or "gift card was for baby supplies"), set "giftCardCategory" to that category name in camelCase.
+
 ## OUTPUT FORMAT
 
 Only include categories that have items. Do not include empty categories.
@@ -116,7 +131,9 @@ Only include categories that have items. Do not include empty categories.
   },
   "originalTotal": 1298,
   "hasUnclearItems": true,
-  "hasMissingItems": true
+  "hasMissingItems": true,
+  "giftCardAmount": 0,
+  "giftCardCategory": null
 }
 
 ## REQUIRED VERIFICATION STEP
