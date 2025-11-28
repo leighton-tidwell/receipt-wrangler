@@ -20,6 +20,8 @@ export interface ParsedReceipt {
   originalTotal: number;
   hasUnclearItems?: boolean;
   hasMissingItems?: boolean;
+  giftCardAmount?: number;
+  giftCardCategory?: string;
 }
 
 export interface PageData {
