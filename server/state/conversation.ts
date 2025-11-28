@@ -33,6 +33,8 @@ export interface ParsedReceipt {
   originalTotal: number;
   hasUnclearItems?: boolean;
   hasMissingItems?: boolean;
+  giftCardAmount?: number; // Gift card payment amount in cents
+  giftCardCategory?: string; // User-specified category to apply gift card to first
 }
 
 export interface ConversationData {
