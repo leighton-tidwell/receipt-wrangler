@@ -71,9 +71,9 @@ export function formatConfirmationMessage(receipt: ParsedReceipt): string {
 
   // Show gift card deduction if present
   if (receipt.giftCardAmount && receipt.giftCardAmount > 0) {
-    lines.push(`Receipt Total: ${formatMoney(receipt.originalTotal)}`);
-    lines.push(`Gift Card Applied: -${formatMoney(receipt.giftCardAmount)}`);
-    lines.push(`Budget Impact: ${formatMoney(total)}`);
+    lines.push(`Subtotal: ${formatMoney(receipt.originalTotal)}`);
+    lines.push(`Gift Card: -${formatMoney(receipt.giftCardAmount)}`);
+    lines.push(`Total: ${formatMoney(total)}`);
   } else {
     lines.push(`Total: ${formatMoney(total)}`);
 
@@ -113,9 +113,9 @@ export function formatFinalSummary(receipt: ParsedReceipt): string {
 
   // Show gift card deduction if present
   if (receipt.giftCardAmount && receipt.giftCardAmount > 0) {
-    lines.push(`Receipt Total: ${formatMoney(receipt.originalTotal)}`);
+    lines.push(`Subtotal: ${formatMoney(receipt.originalTotal)}`);
     lines.push(`Gift Card: -${formatMoney(receipt.giftCardAmount)}`);
-    lines.push(`Budget Impact: ${formatMoney(total)}`);
+    lines.push(`Total: ${formatMoney(total)}`);
   } else {
     lines.push(`Total: ${formatMoney(total)}`);
   }
