@@ -44,20 +44,12 @@ export function ReceiptSummary({
           </div>
         )}
         {hasGiftCard && (
-          <>
-            <div class="flex justify-between border-t border-slate-100 pt-2 text-sm">
-              <span class="text-slate-500">Subtotal</span>
-              <span class="text-slate-700">{formatMoney(originalTotal!)}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-emerald-600">Gift Card</span>
-              <span class="text-emerald-600">-{formatMoney(giftCardAmount!)}</span>
-            </div>
-          </>
+          <div class="flex justify-between text-sm">
+            <span class="text-emerald-600">Gift Card</span>
+            <span class="text-emerald-600">-{formatMoney(giftCardAmount!)}</span>
+          </div>
         )}
-        <div
-          class={`flex justify-between ${hasGiftCard ? 'pt-2' : 'border-t border-slate-100 pt-2'}`}
-        >
+        <div class="flex justify-between border-t border-slate-100 pt-2">
           <span class="font-semibold text-slate-800">Total</span>
           <span class="text-lg font-bold text-slate-800">{formatMoney(total)}</span>
         </div>

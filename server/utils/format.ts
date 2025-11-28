@@ -71,17 +71,14 @@ export function formatConfirmationMessage(receipt: ParsedReceipt): string {
 
   // Show gift card deduction if present
   if (receipt.giftCardAmount && receipt.giftCardAmount > 0) {
-    lines.push(`Subtotal: ${formatMoney(receipt.originalTotal)}`);
     lines.push(`Gift Card: -${formatMoney(receipt.giftCardAmount)}`);
-    lines.push(`Total: ${formatMoney(total)}`);
-  } else {
-    lines.push(`Total: ${formatMoney(total)}`);
+  }
+  lines.push(`Total: ${formatMoney(total)}`);
 
-    // Verify against original
-    if (Math.abs(total - receipt.originalTotal) > 1) {
-      lines.push('');
-      lines.push(`(Note: Original receipt total was ${formatMoney(receipt.originalTotal)})`);
-    }
+  // Verify against original (only when no gift card)
+  if (!receipt.giftCardAmount && Math.abs(total - receipt.originalTotal) > 1) {
+    lines.push('');
+    lines.push(`(Note: Original receipt total was ${formatMoney(receipt.originalTotal)})`);
   }
 
   return lines.join('\n');
@@ -113,12 +110,9 @@ export function formatFinalSummary(receipt: ParsedReceipt): string {
 
   // Show gift card deduction if present
   if (receipt.giftCardAmount && receipt.giftCardAmount > 0) {
-    lines.push(`Subtotal: ${formatMoney(receipt.originalTotal)}`);
     lines.push(`Gift Card: -${formatMoney(receipt.giftCardAmount)}`);
-    lines.push(`Total: ${formatMoney(total)}`);
-  } else {
-    lines.push(`Total: ${formatMoney(total)}`);
   }
+  lines.push(`Total: ${formatMoney(total)}`);
 
   return lines.join('\n');
 }
