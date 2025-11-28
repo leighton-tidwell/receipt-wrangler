@@ -78,6 +78,7 @@ function applyGiftCardDeduction(receipt: ParsedReceipt): void {
       const [key, breakdown] = targetCategory;
       const deduction = Math.min(remainingGiftCard, breakdown.total);
       breakdown.total -= deduction;
+      breakdown.giftCardDeduction = deduction;
       remainingGiftCard -= deduction;
 
       console.log(
@@ -105,6 +106,7 @@ function applyGiftCardDeduction(receipt: ParsedReceipt): void {
       if (extraCents > 0) extraCents--;
 
       breakdown.total -= thisDeduction;
+      breakdown.giftCardDeduction = (breakdown.giftCardDeduction ?? 0) + thisDeduction;
       console.log(`[GiftCard] Applied ${thisDeduction} cents evenly to ${key}`);
     }
   }

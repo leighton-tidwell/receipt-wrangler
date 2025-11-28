@@ -28,10 +28,18 @@ function formatCategoryDetail(label: string, breakdown: CategoryBreakdown): stri
 
   const lines: string[] = [];
 
-  if (breakdown.tax > 0) {
-    lines.push(
-      `${label} (${formatMoney(breakdown.subtotal)} + ${formatMoney(breakdown.tax)} tax = ${formatMoney(breakdown.total)})`
-    );
+  // Build the category header with tax and gift card info
+  const hasGiftCard = breakdown.giftCardDeduction && breakdown.giftCardDeduction > 0;
+  if (breakdown.tax > 0 || hasGiftCard) {
+    let header = `${label} (${formatMoney(breakdown.subtotal)}`;
+    if (breakdown.tax > 0) {
+      header += ` + ${formatMoney(breakdown.tax)} tax`;
+    }
+    if (hasGiftCard) {
+      header += ` - ${formatMoney(breakdown.giftCardDeduction!)} GC`;
+    }
+    header += ` = ${formatMoney(breakdown.total)})`;
+    lines.push(header);
   } else {
     lines.push(`${label} (${formatMoney(breakdown.total)})`);
   }
@@ -91,13 +99,16 @@ export function formatFinalSummary(receipt: ParsedReceipt): string {
     if (breakdown.items.length === 0) continue;
 
     const label = getCategoryLabel(key);
+    const hasGiftCard = breakdown.giftCardDeduction && breakdown.giftCardDeduction > 0;
+
+    let line = `${label}: ${formatMoney(breakdown.subtotal)}`;
     if (breakdown.tax > 0) {
-      lines.push(
-        `${label}: ${formatMoney(breakdown.subtotal)} (+${formatMoney(breakdown.tax)} tax)`
-      );
-    } else {
-      lines.push(`${label}: ${formatMoney(breakdown.total)}`);
+      line += ` (+${formatMoney(breakdown.tax)} tax)`;
     }
+    if (hasGiftCard) {
+      line += ` (-${formatMoney(breakdown.giftCardDeduction!)} GC)`;
+    }
+    lines.push(line);
   }
 
   // Calculate total

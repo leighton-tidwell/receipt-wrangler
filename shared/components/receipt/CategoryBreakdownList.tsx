@@ -38,6 +38,11 @@ export function CategoryBreakdownList({
                   {(breakdown.fees || 0) > 0 ? 'tax/fees' : 'tax'})
                 </span>
               )}
+              {breakdown.giftCardDeduction && breakdown.giftCardDeduction > 0 && (
+                <span class="ml-1 text-xs text-emerald-500">
+                  (-{formatMoney(breakdown.giftCardDeduction)} GC)
+                </span>
+              )}
             </div>
           </div>
         ))}
@@ -68,6 +73,11 @@ export function CategoryBreakdownList({
                 {extras > 0 && (
                   <span class="ml-1 text-xs text-slate-400">
                     (+{formatMoney(extras)} {fees > 0 ? 'tax/fees' : 'tax'})
+                  </span>
+                )}
+                {breakdown.giftCardDeduction && breakdown.giftCardDeduction > 0 && (
+                  <span class="ml-1 text-xs text-emerald-500">
+                    (-{formatMoney(breakdown.giftCardDeduction)} GC)
                   </span>
                 )}
               </div>

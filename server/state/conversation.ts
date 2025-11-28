@@ -13,6 +13,7 @@ export interface CategoryBreakdown {
   fees: number;
   tax: number;
   total: number;
+  giftCardDeduction?: number; // Amount of gift card applied to this category (in cents)
 }
 
 export interface ParsedReceipt {

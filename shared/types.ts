@@ -11,6 +11,7 @@ export interface CategoryBreakdown {
   fees: number;
   tax: number;
   total: number;
+  giftCardDeduction?: number;
 }
 
 export interface ParsedReceipt {
