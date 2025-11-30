@@ -9,6 +9,7 @@ import { Alert } from '@/shared/components/ui/Alert';
 import { Button } from '@/shared/components/ui/Button';
 import { Icon } from '@/shared/components/ui/Icon';
 import { PageLayout } from '@/shared/components/ui/PageLayout';
+import { calculateCreditDistribution } from '@/shared/lib/creditDistribution';
 import type { ParsedReceipt } from '@/shared/types';
 
 interface ReviewPageProps {
@@ -39,6 +40,12 @@ export function ReviewPage({
     totalTax += receipt.categories[key].tax;
   }
   const total = subtotal + totalFees + totalTax;
+
+  const adjustments = calculateCreditDistribution(receipt.categories, receipt.credit);
+  const outOfPocketTotal = Object.values(adjustments).reduce(
+    (sum, adj) => sum + adj.outOfPocket,
+    0
+  );
 
   const handleReprocess = () => {
     setIsProcessing(true);
@@ -96,7 +103,11 @@ export function ReviewPage({
 
       <ReceiptHeader storeName={receipt.storeName} date={receipt.date} />
 
-      <CategoryBreakdownList categories={receipt.categories} variant="detailed" />
+      <CategoryBreakdownList
+        categories={receipt.categories}
+        variant="detailed"
+        adjustments={receipt.credit ? adjustments : undefined}
+      />
 
       <ReceiptSummary
         subtotal={subtotal}
@@ -104,6 +115,8 @@ export function ReviewPage({
         totalTax={totalTax}
         total={total}
         originalTotal={receipt.originalTotal}
+        credit={receipt.credit}
+        outOfPocketTotal={receipt.credit ? outOfPocketTotal : undefined}
       />
 
       <CorrectionForm

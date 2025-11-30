@@ -82,6 +82,33 @@ IMPORTANT: Do NOT calculate tax per item. Instead:
 
 Also split any delivery fees, service fees, or tips evenly across all categories with items. Track these in the "fees" field (not in subtotal). The total for each category = subtotal + fees + tax.
 
+## CREDITS (GIFT CARDS, STORE CREDITS, REWARDS)
+
+Look for credits applied to the receipt such as:
+- Gift cards ("Gift Card", "GC Payment", "Gift Card Payment")
+- Store credits ("Store Credit", "Credit Applied")
+- Rewards points ("Rewards Applied", "Circle Rewards", "Points Redeemed")
+- Any other payment that reduces the total but isn't a regular payment method
+
+CRITICAL: Credits are PAYMENT METHODS, not items. Do NOT add credits to category totals. Category totals should reflect what the ITEMS actually cost (subtotal + tax), regardless of how they were paid for.
+
+When you detect a credit:
+1. Categorize all items normally - the category totals should sum to the RECEIPT TOTAL (what items cost, before any payment method is applied)
+2. Record the credit amount as a positive number in cents in the "credit" field
+3. Set "originalTotal" to what was ACTUALLY PAID in cash/card (receipt total minus credit)
+4. If the user's instructions specify which category to apply the credit to (e.g., "apply credit to home"), set "targetCategory" to that category name in camelCase - this is just metadata for the UI, it does NOT change category totals
+5. If no target category is specified, leave "targetCategory" empty
+
+Example: Receipt with $131.32 total, paid with $23.38 gift card + $107.94 on card:
+{
+  "categories": { ... },  // Totals should sum to 13132 (what items cost)
+  "credit": {
+    "amount": 2338,       // The gift card amount
+    "targetCategory": null
+  },
+  "originalTotal": 10794  // What was paid in cash/card (13132 - 2338)
+}
+
 ## OUTPUT FORMAT
 
 Only include categories that have items. Do not include empty categories.
@@ -127,7 +154,7 @@ Before returning your final output, you MUST call the \`verifyTotals\` tool to v
 
 1. After categorizing all items (including any missing/unclear items in "unknown"), call \`verifyTotals\` with:
    - categoryTotals: array of each category's total (in cents)
-   - expectedTotal: the originalTotal from the receipt (in cents)
+   - expectedTotal: the RECEIPT TOTAL (what items cost, in cents). If a credit was used, this should be originalTotal + credit.amount.
 
 2. After calling verifyTotals, return your structured output immediately - do not loop
 

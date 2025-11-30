@@ -22,6 +22,11 @@ const categoryBreakdownSchema = z.object({
   total: z.number(),
 });
 
+const creditSchema = z.object({
+  amount: z.number(),
+  targetCategory: z.string().optional(),
+});
+
 const receiptResponseSchema = z.object({
   storeName: z.string(),
   date: z.string(),
@@ -31,6 +36,7 @@ const receiptResponseSchema = z.object({
   originalTotal: z.number(),
   hasUnclearItems: z.boolean().optional().default(false),
   hasMissingItems: z.boolean().optional().default(false),
+  credit: creditSchema.optional(),
 });
 
 // Ensure OpenAI API key is set
@@ -113,6 +119,7 @@ export async function processReceipt(
       originalTotal: output.originalTotal,
       hasUnclearItems: output.hasUnclearItems ?? false,
       hasMissingItems: output.hasMissingItems ?? false,
+      credit: output.credit,
     };
 
     return {

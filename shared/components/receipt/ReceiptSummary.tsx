@@ -1,4 +1,5 @@
 import { Card } from '@/shared/components/ui/Card';
+import type { CreditInfo } from '@/shared/types';
 import { formatMoney } from '@/shared/utils';
 
 interface ReceiptSummaryProps {
@@ -7,6 +8,8 @@ interface ReceiptSummaryProps {
   totalTax: number;
   total: number;
   originalTotal?: number;
+  credit?: CreditInfo;
+  outOfPocketTotal?: number;
   showTaxNote?: boolean;
 }
 
@@ -16,9 +19,11 @@ export function ReceiptSummary({
   totalTax,
   total,
   originalTotal,
+  credit,
+  outOfPocketTotal,
   showTaxNote = true,
 }: ReceiptSummaryProps) {
-  const hasMismatch = originalTotal !== undefined && Math.abs(total - originalTotal) > 1;
+  const hasMismatch = originalTotal !== undefined && !credit && Math.abs(total - originalTotal) > 1;
 
   return (
     <Card padding="md" class="animate-slide-up mb-6">
@@ -39,9 +44,17 @@ export function ReceiptSummary({
             <span class="text-slate-700">{formatMoney(totalTax)}</span>
           </div>
         )}
+        {credit && credit.amount > 0 && (
+          <div class="flex justify-between text-sm">
+            <span class="text-emerald-600">Credit</span>
+            <span class="font-medium text-emerald-600">-{formatMoney(credit.amount)}</span>
+          </div>
+        )}
         <div class="flex justify-between border-t border-slate-100 pt-2">
           <span class="font-semibold text-slate-800">Total</span>
-          <span class="text-lg font-bold text-slate-800">{formatMoney(total)}</span>
+          <span class="text-lg font-bold text-slate-800">
+            {formatMoney(credit && outOfPocketTotal !== undefined ? outOfPocketTotal : total)}
+          </span>
         </div>
         {hasMismatch && (
           <div class="flex justify-between pt-2 text-sm">

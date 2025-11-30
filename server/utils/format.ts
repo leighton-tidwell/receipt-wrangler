@@ -1,4 +1,5 @@
 import type { CategoryBreakdown, ParsedReceipt } from '@/server/state/conversation.js';
+import { calculateCreditDistribution } from '@/shared/lib/creditDistribution.js';
 
 const CATEGORY_LABELS: Record<string, string> = {
   groceries: 'GROCERIES',
@@ -23,7 +24,16 @@ function formatMoney(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-function formatCategoryDetail(label: string, breakdown: CategoryBreakdown): string {
+interface CategoryAdjustment {
+  creditApplied: number;
+  outOfPocket: number;
+}
+
+function formatCategoryDetail(
+  label: string,
+  breakdown: CategoryBreakdown,
+  adjustment?: CategoryAdjustment
+): string {
   if (breakdown.items.length === 0) return '';
 
   const lines: string[] = [];
@@ -40,15 +50,25 @@ function formatCategoryDetail(label: string, breakdown: CategoryBreakdown): stri
     lines.push(`- ${item.name} ${formatMoney(item.price)}`);
   }
 
+  if (adjustment && adjustment.creditApplied > 0) {
+    lines.push(
+      `→ Credit: -${formatMoney(adjustment.creditApplied)}, Paid: ${formatMoney(adjustment.outOfPocket)}`
+    );
+  }
+
   return lines.join('\n');
 }
 
 export function formatConfirmationMessage(receipt: ParsedReceipt): string {
   const lines: string[] = ["Here's the breakdown - reply YES to confirm:", ''];
 
+  // Calculate credit adjustments if credit was applied
+  const adjustments = calculateCreditDistribution(receipt.categories, receipt.credit);
+
   for (const [key, breakdown] of Object.entries(receipt.categories)) {
     const label = getCategoryLabel(key);
-    const formatted = formatCategoryDetail(label, breakdown);
+    const adjustment = adjustments[key];
+    const formatted = formatCategoryDetail(label, breakdown, adjustment);
     if (formatted) {
       lines.push(formatted);
       lines.push('');
@@ -68,12 +88,20 @@ export function formatConfirmationMessage(receipt: ParsedReceipt): string {
   if (totalTax > 0) {
     lines.push(`Tax: ${formatMoney(totalTax)}`);
   }
-  lines.push(`Total: ${formatMoney(total)}`);
 
-  // Verify against original
-  if (Math.abs(total - receipt.originalTotal) > 1) {
-    lines.push('');
-    lines.push(`(Note: Original receipt total was ${formatMoney(receipt.originalTotal)})`);
+  // Handle credit
+  if (receipt.credit && receipt.credit.amount > 0) {
+    lines.push(`Credit: -${formatMoney(receipt.credit.amount)}`);
+    const outOfPocket = total - receipt.credit.amount;
+    lines.push(`Total: ${formatMoney(outOfPocket)}`);
+  } else {
+    lines.push(`Total: ${formatMoney(total)}`);
+
+    // Only show mismatch note when no credit (credit explains the difference)
+    if (Math.abs(total - receipt.originalTotal) > 1) {
+      lines.push('');
+      lines.push(`(Note: Original receipt total was ${formatMoney(receipt.originalTotal)})`);
+    }
   }
 
   return lines.join('\n');
@@ -82,27 +110,27 @@ export function formatConfirmationMessage(receipt: ParsedReceipt): string {
 export function formatFinalSummary(receipt: ParsedReceipt): string {
   const lines: string[] = [`${receipt.storeName} - ${receipt.date}`, ''];
 
+  // Calculate credit adjustments if credit was applied
+  const adjustments = calculateCreditDistribution(receipt.categories, receipt.credit);
+
   for (const [key, breakdown] of Object.entries(receipt.categories)) {
     if (breakdown.items.length === 0) continue;
 
     const label = getCategoryLabel(key);
-    if (breakdown.tax > 0) {
-      lines.push(
-        `${label}: ${formatMoney(breakdown.subtotal)} (+${formatMoney(breakdown.tax)} tax)`
-      );
-    } else {
-      lines.push(`${label}: ${formatMoney(breakdown.total)}`);
-    }
+    const adjustment = adjustments[key];
+    const displayTotal = adjustment ? adjustment.outOfPocket : breakdown.total;
+
+    lines.push(`${label}: ${formatMoney(displayTotal)}`);
   }
 
-  // Calculate total
-  let total = 0;
-  for (const breakdown of Object.values(receipt.categories)) {
-    total += breakdown.total;
-  }
+  // Calculate out-of-pocket total
+  const outOfPocketTotal = Object.values(adjustments).reduce(
+    (sum, adj) => sum + adj.outOfPocket,
+    0
+  );
 
   lines.push('');
-  lines.push(`Total: ${formatMoney(total)}`);
+  lines.push(`Total: ${formatMoney(outOfPocketTotal)}`);
 
   return lines.join('\n');
 }

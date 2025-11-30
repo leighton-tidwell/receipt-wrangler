@@ -15,6 +15,11 @@ export interface CategoryBreakdown {
   total: number;
 }
 
+export interface CreditInfo {
+  amount: number;
+  targetCategory?: string;
+}
+
 export interface ParsedReceipt {
   storeName: string;
   date: string;
@@ -33,6 +38,7 @@ export interface ParsedReceipt {
   originalTotal: number;
   hasUnclearItems?: boolean;
   hasMissingItems?: boolean;
+  credit?: CreditInfo;
 }
 
 export interface ConversationData {
