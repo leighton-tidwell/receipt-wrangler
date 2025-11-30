@@ -9,6 +9,7 @@ A Telegram-based receipt categorization bot for family budgeting. Send receipt p
 - **Telegram Interface** - Message receipts directly to a Telegram bot (free, no per-message costs)
 - **Web Upload** - Password-protected web interface for uploading receipts
 - **Tax Distribution** - Evenly distributes store taxes across categories proportionally
+- **Credit Support** - Handles gift cards, store credits, and rewards with proportional distribution across categories
 - **User Corrections** - Provide feedback to recategorize items when needed
 
 ## Tech Stack
