@@ -18,6 +18,8 @@ export const SYSTEM_PROMPT = `You are a receipt categorization assistant for a f
 
 **clothing**: Adult and general clothing items (shirts, pants, shoes, socks, jackets). NOT baby/children's clothing - those go in babySupplies.
 
+**petSupplies**: Pet food, treats, toys, litter, bedding, grooming supplies, pet medications, and other pet care items
+
 **charity**: Round-up donations, charitable contributions shown on receipt
 
 **unknown**: Items that couldn't be clearly read OR missing items that account for total discrepancy

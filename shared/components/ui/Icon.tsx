@@ -143,6 +143,14 @@ const icons = {
       d="M6.5 3L3 6v2h3v12h12V8h3V6l-3.5-3h-4L12 5l-1.5-2h-4z"
     />
   ),
+  petSupplies: (
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 19c-2 0-4-1-4-3 0-1.5 1.5-3 4-5 2.5 2 4 3.5 4 5 0 2-2 3-4 3zm-5-9a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4zm-7-4a2 2 0 100-4 2 2 0 000 4zm4 0a2 2 0 100-4 2 2 0 000 4z"
+    />
+  ),
   tag: (
     <path
       stroke-linecap="round"

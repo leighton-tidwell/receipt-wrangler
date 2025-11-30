@@ -12,6 +12,7 @@ const categoryToIcon: Record<string, IconName> = {
   houseSupplies: 'houseSupplies',
   pharmacy: 'pharmacy',
   clothing: 'clothing',
+  petSupplies: 'petSupplies',
   charity: 'charity',
 };
 
