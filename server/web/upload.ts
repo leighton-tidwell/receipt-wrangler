@@ -21,7 +21,7 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
-export const uploadMiddleware: RequestHandler = upload.array('images', 10) as RequestHandler;
+export const uploadMiddleware: RequestHandler = upload.array('images', 20) as RequestHandler;
 
 // Session management
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
