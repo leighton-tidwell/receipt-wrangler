@@ -6,9 +6,13 @@ import { z } from 'zod';
 import { processReceipt } from '@/server/agent/index.js';
 import { config } from '@/server/config.js';
 import {
+  clearAckTimeout,
+  clearCollectionTimeout,
   getConversation,
   type ParsedReceipt,
   resetConversation,
+  setAckTimeout,
+  setCollectionTimeout,
   updateConversation,
 } from '@/server/state/conversation.js';
 import { getFileUrl, sendToReceiver, sendToSender } from '@/server/telegram/send.js';
@@ -90,6 +94,7 @@ interface TelegramMessage {
   text?: string;
   photo?: TelegramPhoto[];
   caption?: string;
+  media_group_id?: string; // Telegram's media group identifier for albums
 }
 
 interface TelegramUpdate {
@@ -122,6 +127,68 @@ function isRejection(text: string): boolean {
   const rejectWords = ['no', 'nope', 'cancel', 'stop', 'reset', 'start over'];
   const normalized = text.toLowerCase().trim();
   return rejectWords.some((word) => normalized === word || normalized.startsWith(word));
+}
+
+// Timeout constants
+const IMAGE_COLLECTION_TIMEOUT_MS = 5000; // 5 seconds before prompting for confirmation
+const IMAGE_ACK_DEBOUNCE_MS = 1500; // 1.5 seconds debounce for acknowledgment messages
+
+async function promptImageCollectionComplete(chatId: string): Promise<void> {
+  updateConversation({ state: 'AWAITING_IMAGE_CONFIRM' });
+  await sendToSender(
+    chatId,
+    'Are you done sending images? Reply YES to process or keep sending more.'
+  );
+}
+
+async function sendDebouncedAck(chatId: string): Promise<void> {
+  const conversation = getConversation();
+  const imageCount = conversation.pendingImages.length;
+  await sendToSender(
+    chatId,
+    `Got ${imageCount} image${imageCount > 1 ? 's' : ''}! Send more or wait a moment...`
+  );
+}
+
+async function startProcessing(chatId: string): Promise<void> {
+  const conversation = getConversation();
+
+  clearCollectionTimeout();
+  clearAckTimeout();
+
+  updateConversation({ state: 'PROCESSING' });
+
+  const imageCount = conversation.pendingImages.length;
+  await sendToSender(chatId, `Processing ${imageCount} image${imageCount > 1 ? 's' : ''}...`);
+
+  const result = await processReceipt(
+    conversation.pendingImages,
+    null, // No text content when we have images
+    conversation.userGuidance
+  );
+
+  if (result.error) {
+    await sendToSender(chatId, result.error);
+    resetConversation();
+    return;
+  }
+
+  if (result.parsedReceipt) {
+    if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
+      updateConversation({
+        state: 'AWAITING_STORE_INFO',
+        parsedReceipt: result.parsedReceipt,
+      });
+      await sendToSender(chatId, buildStoreInfoPrompt(result.parsedReceipt));
+    } else {
+      updateConversation({
+        state: 'AWAITING_CONFIRM',
+        parsedReceipt: result.parsedReceipt,
+      });
+      const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
+      await sendToSender(chatId, confirmMsg);
+    }
+  }
 }
 
 export async function handleTelegramWebhook(req: Request, res: Response): Promise<void> {
@@ -161,13 +228,51 @@ export async function handleTelegramWebhook(req: Request, res: Response): Promis
     // Handle based on current state
     switch (conversation.state) {
       case 'IDLE': {
-        // New receipt coming in
+        // No photo and no text - prompt user
         if (photoFileIds.length === 0 && !messageText) {
           await sendToSender(chatId, 'Send me a receipt photo or paste the receipt text!');
           break;
         }
 
-        // Convert file IDs to URLs
+        // Text-only receipt (no images) - process immediately
+        if (photoFileIds.length === 0 && messageText) {
+          updateConversation({
+            state: 'PROCESSING',
+            pendingImages: [],
+            userGuidance: null,
+            senderPhone: chatId,
+          });
+
+          await sendToSender(chatId, 'Got it! Processing your receipt...');
+
+          const result = await processReceipt([], messageText, null);
+
+          if (result.error) {
+            await sendToSender(chatId, result.error);
+            resetConversation();
+            break;
+          }
+
+          if (result.parsedReceipt) {
+            if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
+              updateConversation({
+                state: 'AWAITING_STORE_INFO',
+                parsedReceipt: result.parsedReceipt,
+              });
+              await sendToSender(chatId, buildStoreInfoPrompt(result.parsedReceipt));
+            } else {
+              updateConversation({
+                state: 'AWAITING_CONFIRM',
+                parsedReceipt: result.parsedReceipt,
+              });
+              const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
+              await sendToSender(chatId, confirmMsg);
+            }
+          }
+          break;
+        }
+
+        // Photo received - start collecting images
         const imageUrls: string[] = [];
         for (const fileId of photoFileIds) {
           const url = await getFileUrl(fileId);
@@ -175,48 +280,142 @@ export async function handleTelegramWebhook(req: Request, res: Response): Promis
         }
 
         updateConversation({
-          state: 'PROCESSING',
+          state: 'COLLECTING_IMAGES',
           pendingImages: imageUrls,
-          userGuidance: messageText || null,
-          senderPhone: chatId, // Using chatId as sender identifier
+          userGuidance: messageText || null, // Caption becomes guidance
+          senderPhone: chatId,
+          mediaGroupId: message.media_group_id || null,
+          collectionStartTime: new Date(),
         });
 
-        await sendToSender(chatId, 'Got it! Processing your receipt...');
+        // Start collection timeout - will prompt user after 5 seconds of inactivity
+        setCollectionTimeout(() => {
+          promptImageCollectionComplete(chatId);
+        }, IMAGE_COLLECTION_TIMEOUT_MS);
 
-        const result = await processReceipt(
-          imageUrls,
-          imageUrls.length === 0 ? messageText : null,
-          imageUrls.length > 0 ? messageText : null
-        );
+        // Start debounced acknowledgment
+        setAckTimeout(() => {
+          sendDebouncedAck(chatId);
+        }, IMAGE_ACK_DEBOUNCE_MS);
 
-        if (result.error) {
-          await sendToSender(chatId, result.error);
-          resetConversation();
-          break;
-        }
-
-        if (result.parsedReceipt) {
-          if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
-            updateConversation({
-              state: 'AWAITING_STORE_INFO',
-              parsedReceipt: result.parsedReceipt,
-            });
-            await sendToSender(chatId, buildStoreInfoPrompt(result.parsedReceipt));
-          } else {
-            updateConversation({
-              state: 'AWAITING_CONFIRM',
-              parsedReceipt: result.parsedReceipt,
-            });
-            const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-            await sendToSender(chatId, confirmMsg);
-          }
-        }
         break;
       }
 
       case 'PROCESSING': {
         // Still processing, shouldn't receive messages here normally
         await sendToSender(chatId, 'Still processing your receipt, please wait a moment...');
+        break;
+      }
+
+      case 'COLLECTING_IMAGES': {
+        // User sending more images
+        if (photoFileIds.length > 0) {
+          const imageUrls: string[] = [];
+          for (const fileId of photoFileIds) {
+            const url = await getFileUrl(fileId);
+            imageUrls.push(url);
+          }
+
+          // Add to existing images
+          const allImages = [...conversation.pendingImages, ...imageUrls];
+
+          // Capture caption as additional guidance if present
+          const guidance =
+            messageText && !conversation.userGuidance ? messageText : conversation.userGuidance;
+
+          updateConversation({
+            pendingImages: allImages,
+            userGuidance: guidance,
+            mediaGroupId: message.media_group_id || conversation.mediaGroupId,
+          });
+
+          // Reset both timeouts since user is still sending
+          setCollectionTimeout(() => {
+            promptImageCollectionComplete(chatId);
+          }, IMAGE_COLLECTION_TIMEOUT_MS);
+
+          setAckTimeout(() => {
+            sendDebouncedAck(chatId);
+          }, IMAGE_ACK_DEBOUNCE_MS);
+
+          break;
+        }
+
+        // User sent text (not a photo) - check if it's a "done" confirmation
+        if (messageText) {
+          if (isConfirmation(messageText)) {
+            // User is saying they're done early - proceed to processing
+            await startProcessing(chatId);
+            break;
+          }
+
+          // Not a confirmation - treat as additional guidance
+          const combinedGuidance = conversation.userGuidance
+            ? `${conversation.userGuidance}\n${messageText}`
+            : messageText;
+
+          updateConversation({ userGuidance: combinedGuidance });
+          await sendToSender(chatId, 'Got your note. Keep sending images or say YES when done.');
+
+          // Reset timeout
+          setCollectionTimeout(() => {
+            promptImageCollectionComplete(chatId);
+          }, IMAGE_COLLECTION_TIMEOUT_MS);
+          break;
+        }
+
+        // Empty message - ignore
+        break;
+      }
+
+      case 'AWAITING_IMAGE_CONFIRM': {
+        // User sends more images after being prompted
+        if (photoFileIds.length > 0) {
+          const imageUrls: string[] = [];
+          for (const fileId of photoFileIds) {
+            const url = await getFileUrl(fileId);
+            imageUrls.push(url);
+          }
+
+          const allImages = [...conversation.pendingImages, ...imageUrls];
+
+          updateConversation({
+            state: 'COLLECTING_IMAGES', // Go back to collecting
+            pendingImages: allImages,
+          });
+
+          // Reset timeouts
+          setCollectionTimeout(() => {
+            promptImageCollectionComplete(chatId);
+          }, IMAGE_COLLECTION_TIMEOUT_MS);
+
+          setAckTimeout(() => {
+            sendDebouncedAck(chatId);
+          }, IMAGE_ACK_DEBOUNCE_MS);
+
+          break;
+        }
+
+        // User confirms they're done
+        if (isConfirmation(messageText)) {
+          await startProcessing(chatId);
+          break;
+        }
+
+        // User cancels
+        if (isRejection(messageText)) {
+          resetConversation();
+          await sendToSender(chatId, 'Cancelled. Send a new receipt when ready.');
+          break;
+        }
+
+        // Any other text - treat as guidance and ask again
+        const combinedGuidance = conversation.userGuidance
+          ? `${conversation.userGuidance}\n${messageText}`
+          : messageText;
+
+        updateConversation({ userGuidance: combinedGuidance });
+        await sendToSender(chatId, 'Got your note! Reply YES to process or send more images.');
         break;
       }
 
