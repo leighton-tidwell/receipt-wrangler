@@ -3,6 +3,7 @@ import express from 'express';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+import { handleAguiRun } from '@/server/agui/sse.js';
 import { config } from '@/server/config.js';
 import { handleTelegramWebhook } from '@/server/telegram/webhook.js';
 import {
@@ -39,6 +40,9 @@ app.get('/health', (_req, res) => {
 
 // Telegram webhook endpoint
 app.post('/webhook/telegram', handleTelegramWebhook);
+
+// AG-UI SSE bridge (for future CopilotKit / browser clients)
+app.post('/api/agui/run', handleAguiRun);
 
 // Web upload endpoints
 app.get('/upload', getUploadPage);
