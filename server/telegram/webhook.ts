@@ -1,76 +1,16 @@
-import { openai } from '@ai-sdk/openai';
-import { generateObject } from 'ai';
+import { Command } from '@langchain/langgraph';
 import type { Request, Response } from 'express';
-import { z } from 'zod';
 
-import { processReceipt } from '@/server/agent/index.js';
 import { config } from '@/server/config.js';
+import { receiptGraph } from '@/server/graph/index.js';
+import type { ParsedReceipt } from '@/server/state/conversation.js';
 import {
-  clearAckTimeout,
-  clearCollectionTimeout,
-  getConversation,
-  type ParsedReceipt,
-  resetConversation,
-  setAckTimeout,
-  setCollectionTimeout,
-  updateConversation,
-} from '@/server/state/conversation.js';
-import { getFileUrl, sendToReceiver, sendToSender } from '@/server/telegram/send.js';
-import { formatConfirmationMessage, formatFinalSummary } from '@/server/utils/format.js';
-
-// Ensure OpenAI API key is set
-process.env.OPENAI_API_KEY = config.openaiApiKey;
-
-const storeInfoSchema = z.object({
-  storeName: z
-    .string()
-    .nullable()
-    .describe('The store name if provided by the user, or null if not mentioned'),
-  date: z
-    .string()
-    .nullable()
-    .describe('The date if provided by the user (in any format), or null if not mentioned'),
-});
-
-function buildStoreInfoPrompt(receipt: ParsedReceipt): string {
-  const needed: string[] = [];
-  if (receipt.missingStoreName) needed.push('store name');
-  if (receipt.missingDate) needed.push('date');
-  const example =
-    receipt.missingStoreName && receipt.missingDate
-      ? 'HEB, 11/26/25'
-      : receipt.missingStoreName
-        ? 'HEB'
-        : '11/26/25';
-  return `I couldn't detect the ${needed.join(' or ')}. Please reply with the ${needed.join(' and ')} (e.g., "${example}").`;
-}
-
-async function parseStoreInfoWithLLM(
-  text: string,
-  receipt: ParsedReceipt
-): Promise<{ storeName: string | null; date: string | null }> {
-  const needing: string[] = [];
-  if (receipt.missingStoreName) needing.push('store name');
-  if (receipt.missingDate) needing.push('date');
-
-  const today = new Date();
-  const currentDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear().toString().slice(-2)}`;
-
-  const { object } = await generateObject({
-    model: openai('gpt-4o-mini'),
-    schema: storeInfoSchema,
-    prompt: `The user was asked to provide the ${needing.join(' and ')} for a receipt. Extract the information from their response.
-
-Today's date is ${currentDate}.
-
-User's response: "${text}"
-
-Extract the store name and/or date if provided. Return null for any field not mentioned.
-If a date is provided, convert it to MM/DD/YY format (e.g., "11/26/25"). Handle relative dates like "today" or "yesterday" using today's date.`,
-  });
-
-  return object;
-}
+  answerCallbackQuery,
+  getFileUrl,
+  type InlineButton,
+  sendToSender,
+} from '@/server/telegram/send.js';
+import { formatConfirmationMessage } from '@/server/utils/format.js';
 
 interface TelegramPhoto {
   file_id: string;
@@ -82,444 +22,249 @@ interface TelegramPhoto {
 
 interface TelegramMessage {
   message_id: number;
-  from?: {
-    id: number;
-    first_name: string;
-    username?: string;
-  };
-  chat: {
-    id: number;
-    type: string;
-  };
+  from?: { id: number; first_name: string; username?: string };
+  chat: { id: number; type: string };
   text?: string;
   photo?: TelegramPhoto[];
   caption?: string;
-  media_group_id?: string; // Telegram's media group identifier for albums
+  media_group_id?: string;
+}
+
+interface TelegramCallbackQuery {
+  id: string;
+  from: { id: number; first_name: string };
+  message?: TelegramMessage;
+  data?: string;
 }
 
 interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
+  callback_query?: TelegramCallbackQuery;
 }
 
-function isConfirmation(text: string): boolean {
-  const confirmWords = [
-    'yes',
-    'yep',
-    'yeah',
-    'y',
-    'confirm',
-    'looks good',
-    'good',
-    'correct',
-    'ok',
-    'okay',
-    'send it',
-    'send',
-    'approved',
-    'approve',
-  ];
-  const normalized = text.toLowerCase().trim();
-  return confirmWords.some((word) => normalized === word || normalized.startsWith(word));
-}
+const threadConfig = (chatId: string) => ({ configurable: { thread_id: `tg:${chatId}` } });
 
-function isRejection(text: string): boolean {
-  const rejectWords = ['no', 'nope', 'cancel', 'stop', 'reset', 'start over'];
-  const normalized = text.toLowerCase().trim();
-  return rejectWords.some((word) => normalized === word || normalized.startsWith(word));
-}
+/**
+ * In-flight flag per chat. Prevents concurrent graph invocations from the same
+ * chat racing each other (e.g., a media_group dumping 5 photos in 200 ms).
+ */
+const inflight = new Map<string, Promise<unknown>>();
 
-// Timeout constants
-const IMAGE_COLLECTION_TIMEOUT_MS = 5000; // 5 seconds before prompting for confirmation
-const IMAGE_ACK_DEBOUNCE_MS = 1500; // 1.5 seconds debounce for acknowledgment messages
-
-async function promptImageCollectionComplete(chatId: string): Promise<void> {
-  updateConversation({ state: 'AWAITING_IMAGE_CONFIRM' });
-  await sendToSender(
+async function runSerial<T>(chatId: string, fn: () => Promise<T>): Promise<T> {
+  const prev = inflight.get(chatId) ?? Promise.resolve();
+  const next = prev.then(fn, fn);
+  inflight.set(
     chatId,
-    'Are you done sending images? Reply YES to process or keep sending more.'
+    next.catch(() => {})
   );
+  return next;
 }
 
-async function sendDebouncedAck(chatId: string): Promise<void> {
-  const conversation = getConversation();
-  const imageCount = conversation.pendingImages.length;
-  await sendToSender(
-    chatId,
-    `Got ${imageCount} image${imageCount > 1 ? 's' : ''}! Send more or wait a moment...`
-  );
-}
-
-async function startProcessing(chatId: string): Promise<void> {
-  const conversation = getConversation();
-
-  clearCollectionTimeout();
-  clearAckTimeout();
-
-  updateConversation({ state: 'PROCESSING' });
-
-  const imageCount = conversation.pendingImages.length;
-  await sendToSender(chatId, `Processing ${imageCount} image${imageCount > 1 ? 's' : ''}...`);
-
-  const result = await processReceipt(
-    conversation.pendingImages,
-    null, // No text content when we have images
-    conversation.userGuidance
-  );
-
-  if (result.error) {
-    await sendToSender(chatId, result.error);
-    resetConversation();
+/** Resume or start the graph, then surface any pending interrupt to Telegram. */
+async function driveGraph(
+  chatId: string,
+  input: Parameters<typeof receiptGraph.invoke>[0]
+): Promise<void> {
+  const cfg = threadConfig(chatId);
+  try {
+    await receiptGraph.invoke(input, cfg);
+  } catch (err) {
+    console.error('[graph] invoke error:', err);
+    await sendToSender(chatId, 'Sorry, something went wrong processing that.');
     return;
   }
 
-  if (result.parsedReceipt) {
-    if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
-      updateConversation({
-        state: 'AWAITING_STORE_INFO',
-        parsedReceipt: result.parsedReceipt,
-      });
-      await sendToSender(chatId, buildStoreInfoPrompt(result.parsedReceipt));
-    } else {
-      updateConversation({
-        state: 'AWAITING_CONFIRM',
-        parsedReceipt: result.parsedReceipt,
-      });
-      const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-      await sendToSender(chatId, confirmMsg);
+  const snapshot = await receiptGraph.getState(cfg);
+  const interrupts = (snapshot.tasks ?? []).flatMap((t) => t.interrupts ?? []);
+
+  if (interrupts.length === 0) {
+    // Graph finished; reset for next receipt by clearing the thread via a no-op start.
+    return;
+  }
+
+  const payload = interrupts[0].value as InterruptPayload;
+  await surfaceInterrupt(chatId, payload);
+}
+
+type InterruptPayload =
+  | {
+      type: 'collect_images';
+      imageCount: number;
+      prompt: string;
+      actions: { id: string; label: string; disabled?: boolean }[];
     }
+  | {
+      type: 'confirm_receipt';
+      parsedReceipt: ParsedReceipt;
+      prompt: string;
+      actions: { id: string; label: string }[];
+    };
+
+async function surfaceInterrupt(chatId: string, payload: InterruptPayload): Promise<void> {
+  if (payload.type === 'collect_images') {
+    const buttons: InlineButton[][] = [
+      payload.actions
+        .filter((a) => !a.disabled)
+        .map((a) => ({ text: a.label, callback_data: `collect:${a.id}` })),
+    ];
+    await sendToSender(chatId, payload.prompt, buttons.flat().length ? buttons : undefined);
+    return;
+  }
+
+  if (payload.type === 'confirm_receipt') {
+    const msg = formatConfirmationMessage(payload.parsedReceipt);
+    const buttons: InlineButton[][] = [
+      payload.actions.map((a) => ({ text: a.label, callback_data: `confirm:${a.id}` })),
+    ];
+    await sendToSender(chatId, msg, buttons);
   }
 }
 
 export async function handleTelegramWebhook(req: Request, res: Response): Promise<void> {
   const update = req.body as TelegramUpdate;
-
-  // Respond immediately to Telegram
   res.status(200).json({ ok: true });
 
-  if (!update.message) {
-    return;
+  try {
+    if (update.callback_query) {
+      await handleCallbackQuery(update.callback_query);
+      return;
+    }
+    if (update.message) {
+      await handleMessage(update.message);
+    }
+  } catch (err) {
+    console.error('[webhook] error:', err);
   }
+}
 
-  const message = update.message;
+async function handleMessage(message: TelegramMessage): Promise<void> {
   const chatId = message.chat.id.toString();
-  const messageText = message.text?.trim() || message.caption?.trim() || '';
+  const text = message.text?.trim() || message.caption?.trim() || '';
 
-  // Get photo URLs if present (Telegram sends multiple sizes, use the largest)
-  const photoFileIds: string[] = [];
-  if (message.photo && message.photo.length > 0) {
-    // Last photo in array is highest resolution
-    const largestPhoto = message.photo[message.photo.length - 1];
-    photoFileIds.push(largestPhoto.file_id);
-  }
-
-  console.log(`[TG <- ${chatId}] "${messageText}" (${photoFileIds.length} images)`);
-
-  // Only respond to authorized chat IDs
   const authorizedChatIds = [config.senderChatId, config.receiverChatId].filter(Boolean);
   if (!authorizedChatIds.includes(chatId)) {
-    console.log(`Ignoring message from unauthorized chat: ${chatId}`);
+    console.log(`[webhook] ignoring unauthorized chat: ${chatId}`);
     return;
   }
 
-  const conversation = getConversation();
+  const photoFileIds: string[] = [];
+  if (message.photo && message.photo.length > 0) {
+    photoFileIds.push(message.photo[message.photo.length - 1].file_id);
+  }
 
-  try {
-    // Handle based on current state
-    switch (conversation.state) {
-      case 'IDLE': {
-        // No photo and no text - prompt user
-        if (photoFileIds.length === 0 && !messageText) {
-          await sendToSender(chatId, 'Send me a receipt photo or paste the receipt text!');
-          break;
-        }
+  console.log(`[TG <- ${chatId}] "${text}" (${photoFileIds.length} images)`);
 
-        // Text-only receipt (no images) - process immediately
-        if (photoFileIds.length === 0 && messageText) {
-          updateConversation({
-            state: 'PROCESSING',
-            pendingImages: [],
-            userGuidance: null,
-            senderPhone: chatId,
-          });
+  if (photoFileIds.length > 0) {
+    const urls = await Promise.all(photoFileIds.map(getFileUrl));
+    await runSerial(chatId, () => onPhotos(chatId, urls, text || null));
+    return;
+  }
 
-          await sendToSender(chatId, 'Got it! Processing your receipt...');
+  if (!text) {
+    await sendToSender(chatId, 'Send me a receipt photo or paste the receipt text!');
+    return;
+  }
 
-          const result = await processReceipt([], messageText, null);
+  // Text-only path
+  await runSerial(chatId, () => onText(chatId, text));
+}
 
-          if (result.error) {
-            await sendToSender(chatId, result.error);
-            resetConversation();
-            break;
-          }
+async function onPhotos(
+  chatId: string,
+  imageUrls: string[],
+  caption: string | null
+): Promise<void> {
+  const cfg = threadConfig(chatId);
+  const snapshot = await receiptGraph.getState(cfg);
+  const hasActiveThread = !!snapshot.next && snapshot.next.length > 0;
 
-          if (result.parsedReceipt) {
-            if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
-              updateConversation({
-                state: 'AWAITING_STORE_INFO',
-                parsedReceipt: result.parsedReceipt,
-              });
-              await sendToSender(chatId, buildStoreInfoPrompt(result.parsedReceipt));
-            } else {
-              updateConversation({
-                state: 'AWAITING_CONFIRM',
-                parsedReceipt: result.parsedReceipt,
-              });
-              const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-              await sendToSender(chatId, confirmMsg);
-            }
-          }
-          break;
-        }
+  if (!hasActiveThread) {
+    // Fresh thread
+    await driveGraph(chatId, {
+      channel: 'telegram',
+      chatId,
+      pendingImages: imageUrls,
+      userGuidance: caption,
+    });
+    return;
+  }
 
-        // Photo received - start collecting images
-        const imageUrls: string[] = [];
-        for (const fileId of photoFileIds) {
-          const url = await getFileUrl(fileId);
-          imageUrls.push(url);
-        }
+  // Active thread: must be mid-collection. Resume with additional images.
+  await driveGraph(
+    chatId,
+    new Command({
+      resume: { addImages: imageUrls, guidance: caption ?? undefined },
+    })
+  );
+}
 
-        updateConversation({
-          state: 'COLLECTING_IMAGES',
-          pendingImages: imageUrls,
-          userGuidance: messageText || null, // Caption becomes guidance
-          senderPhone: chatId,
-          mediaGroupId: message.media_group_id || null,
-          collectionStartTime: new Date(),
-        });
+async function onText(chatId: string, text: string): Promise<void> {
+  const cfg = threadConfig(chatId);
+  const snapshot = await receiptGraph.getState(cfg);
+  const hasActiveThread = !!snapshot.next && snapshot.next.length > 0;
 
-        // Start collection timeout - will prompt user after 5 seconds of inactivity
-        setCollectionTimeout(() => {
-          promptImageCollectionComplete(chatId);
-        }, IMAGE_COLLECTION_TIMEOUT_MS);
+  if (!hasActiveThread) {
+    // Treat as text-only receipt — skip collect_images by setting textContent.
+    await driveGraph(chatId, {
+      channel: 'telegram',
+      chatId,
+      textContent: text,
+    });
+    return;
+  }
 
-        // Start debounced acknowledgment
-        setAckTimeout(() => {
-          sendDebouncedAck(chatId);
-        }, IMAGE_ACK_DEBOUNCE_MS);
+  // Active thread: figure out which interrupt is pending.
+  const interrupts = (snapshot.tasks ?? []).flatMap((t) => t.interrupts ?? []);
+  const pending = interrupts[0]?.value as InterruptPayload | undefined;
 
-        break;
-      }
+  if (pending?.type === 'collect_images') {
+    // Interpret free text as additional guidance — keep collecting.
+    await driveGraph(chatId, new Command({ resume: { guidance: text } }));
+    await sendToSender(chatId, 'Got your note. Send more or tap Done.');
+    return;
+  }
 
-      case 'PROCESSING': {
-        // Still processing, shouldn't receive messages here normally
-        await sendToSender(chatId, 'Still processing your receipt, please wait a moment...');
-        break;
-      }
+  if (pending?.type === 'confirm_receipt') {
+    // Free text during confirmation is treated as edit corrections.
+    await driveGraph(chatId, new Command({ resume: { decision: 'edit', corrections: text } }));
+    return;
+  }
 
-      case 'COLLECTING_IMAGES': {
-        // User sending more images
-        if (photoFileIds.length > 0) {
-          const imageUrls: string[] = [];
-          for (const fileId of photoFileIds) {
-            const url = await getFileUrl(fileId);
-            imageUrls.push(url);
-          }
+  await sendToSender(chatId, 'Still working — hang tight.');
+}
 
-          // Add to existing images
-          const allImages = [...conversation.pendingImages, ...imageUrls];
+async function handleCallbackQuery(query: TelegramCallbackQuery): Promise<void> {
+  const data = query.data ?? '';
+  const chatId = query.message?.chat.id.toString();
+  if (!chatId) return;
 
-          // Capture caption as additional guidance if present
-          const guidance =
-            messageText && !conversation.userGuidance ? messageText : conversation.userGuidance;
+  await answerCallbackQuery(query.id);
 
-          updateConversation({
-            pendingImages: allImages,
-            userGuidance: guidance,
-            mediaGroupId: message.media_group_id || conversation.mediaGroupId,
-          });
+  const [kind, action] = data.split(':');
 
-          // Reset both timeouts since user is still sending
-          setCollectionTimeout(() => {
-            promptImageCollectionComplete(chatId);
-          }, IMAGE_COLLECTION_TIMEOUT_MS);
-
-          setAckTimeout(() => {
-            sendDebouncedAck(chatId);
-          }, IMAGE_ACK_DEBOUNCE_MS);
-
-          break;
-        }
-
-        // User sent text (not a photo) - check if it's a "done" confirmation
-        if (messageText) {
-          if (isConfirmation(messageText)) {
-            // User is saying they're done early - proceed to processing
-            await startProcessing(chatId);
-            break;
-          }
-
-          // Not a confirmation - treat as additional guidance
-          const combinedGuidance = conversation.userGuidance
-            ? `${conversation.userGuidance}\n${messageText}`
-            : messageText;
-
-          updateConversation({ userGuidance: combinedGuidance });
-          await sendToSender(chatId, 'Got your note. Keep sending images or say YES when done.');
-
-          // Reset timeout
-          setCollectionTimeout(() => {
-            promptImageCollectionComplete(chatId);
-          }, IMAGE_COLLECTION_TIMEOUT_MS);
-          break;
-        }
-
-        // Empty message - ignore
-        break;
-      }
-
-      case 'AWAITING_IMAGE_CONFIRM': {
-        // User sends more images after being prompted
-        if (photoFileIds.length > 0) {
-          const imageUrls: string[] = [];
-          for (const fileId of photoFileIds) {
-            const url = await getFileUrl(fileId);
-            imageUrls.push(url);
-          }
-
-          const allImages = [...conversation.pendingImages, ...imageUrls];
-
-          updateConversation({
-            state: 'COLLECTING_IMAGES', // Go back to collecting
-            pendingImages: allImages,
-          });
-
-          // Reset timeouts
-          setCollectionTimeout(() => {
-            promptImageCollectionComplete(chatId);
-          }, IMAGE_COLLECTION_TIMEOUT_MS);
-
-          setAckTimeout(() => {
-            sendDebouncedAck(chatId);
-          }, IMAGE_ACK_DEBOUNCE_MS);
-
-          break;
-        }
-
-        // User confirms they're done
-        if (isConfirmation(messageText)) {
-          await startProcessing(chatId);
-          break;
-        }
-
-        // User cancels
-        if (isRejection(messageText)) {
-          resetConversation();
-          await sendToSender(chatId, 'Cancelled. Send a new receipt when ready.');
-          break;
-        }
-
-        // Any other text - treat as guidance and ask again
-        const combinedGuidance = conversation.userGuidance
-          ? `${conversation.userGuidance}\n${messageText}`
-          : messageText;
-
-        updateConversation({ userGuidance: combinedGuidance });
-        await sendToSender(chatId, 'Got your note! Reply YES to process or send more images.');
-        break;
-      }
-
-      case 'AWAITING_STORE_INFO': {
-        if (!conversation.parsedReceipt) {
-          resetConversation();
-          await sendToSender(chatId, 'Something went wrong. Please send your receipt again.');
-          break;
-        }
-
-        const parsed = await parseStoreInfoWithLLM(messageText, conversation.parsedReceipt);
-
-        // Update the receipt with provided info and clear flags
-        const updatedReceipt = { ...conversation.parsedReceipt };
-        if (parsed.storeName) {
-          updatedReceipt.storeName = parsed.storeName;
-          updatedReceipt.missingStoreName = false;
-        }
-        if (parsed.date) {
-          updatedReceipt.date = parsed.date;
-          updatedReceipt.missingDate = false;
-        }
-
-        // Check if we still need info
-        if (updatedReceipt.missingStoreName || updatedReceipt.missingDate) {
-          updateConversation({ parsedReceipt: updatedReceipt });
-          await sendToSender(chatId, buildStoreInfoPrompt(updatedReceipt));
-          break;
-        }
-
-        // All info collected, proceed to confirmation
-        updateConversation({
-          state: 'AWAITING_CONFIRM',
-          parsedReceipt: updatedReceipt,
-        });
-        const confirmMsg = formatConfirmationMessage(updatedReceipt);
-        await sendToSender(chatId, confirmMsg);
-        break;
-      }
-
-      case 'AWAITING_CONFIRM': {
-        // Check if they're trying to send a new receipt
-        if (photoFileIds.length > 0) {
-          await sendToSender(
-            chatId,
-            'Please confirm or cancel the current receipt first (reply YES or NO), then send the new one.'
-          );
-          break;
-        }
-
-        if (isRejection(messageText)) {
-          resetConversation();
-          await sendToSender(chatId, 'Cancelled. Send a new receipt or re-send with corrections.');
-          break;
-        }
-
-        if (isConfirmation(messageText)) {
-          if (conversation.parsedReceipt) {
-            const summary = formatFinalSummary(conversation.parsedReceipt);
-            await sendToReceiver(summary);
-            await sendToSender(chatId, 'Done! Sent the breakdown to the budget.');
-          }
-          resetConversation();
-          break;
-        }
-
-        // They're providing corrections - reprocess with feedback
-        updateConversation({ state: 'PROCESSING' });
-        await sendToSender(chatId, 'Got it, updating based on your feedback...');
-
-        const combinedGuidance = conversation.userGuidance
-          ? `${conversation.userGuidance}\n\nCorrections: ${messageText}`
-          : messageText;
-
-        const result = await processReceipt(conversation.pendingImages, null, combinedGuidance);
-
-        if (result.error) {
-          await sendToSender(chatId, result.error);
-          resetConversation();
-          break;
-        }
-
-        if (result.parsedReceipt) {
-          if (result.parsedReceipt.missingStoreName || result.parsedReceipt.missingDate) {
-            updateConversation({
-              state: 'AWAITING_STORE_INFO',
-              parsedReceipt: result.parsedReceipt,
-            });
-            await sendToSender(chatId, buildStoreInfoPrompt(result.parsedReceipt));
-          } else {
-            updateConversation({
-              state: 'AWAITING_CONFIRM',
-              parsedReceipt: result.parsedReceipt,
-            });
-            const confirmMsg = formatConfirmationMessage(result.parsedReceipt);
-            await sendToSender(chatId, confirmMsg);
-          }
-        }
-        break;
-      }
+  if (kind === 'collect') {
+    if (action === 'done') {
+      await runSerial(chatId, () => driveGraph(chatId, new Command({ resume: { done: true } })));
+    } else if (action === 'cancel') {
+      await runSerial(chatId, () => driveGraph(chatId, new Command({ resume: { cancel: true } })));
+      await sendToSender(chatId, 'Cancelled.');
     }
-  } catch (error) {
-    console.error('Error handling Telegram message:', error);
-    await sendToSender(chatId, 'Sorry, something went wrong. Please try again.');
-    resetConversation();
+    return;
+  }
+
+  if (kind === 'confirm') {
+    if (action === 'approve') {
+      await runSerial(chatId, () =>
+        driveGraph(chatId, new Command({ resume: { decision: 'approve' } }))
+      );
+    } else if (action === 'reject') {
+      await runSerial(chatId, () =>
+        driveGraph(chatId, new Command({ resume: { decision: 'reject' } }))
+      );
+      await sendToSender(chatId, 'Rejected. Send a new receipt when ready.');
+    } else if (action === 'edit') {
+      await sendToSender(chatId, 'What should I change? Reply with the correction.');
+    }
   }
 }
