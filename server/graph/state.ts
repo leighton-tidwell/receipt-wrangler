@@ -31,6 +31,14 @@ export const ReceiptGraphState = Annotation.Root({
     reducer: (_curr, next) => next,
     default: () => null,
   }),
+  collectionDone: Annotation<boolean>({
+    reducer: (_curr, next) => next,
+    default: () => false,
+  }),
+  cancelled: Annotation<boolean>({
+    reducer: (_curr, next) => next,
+    default: () => false,
+  }),
   channel: Annotation<'telegram' | 'web'>({
     reducer: (_curr, next) => next,
     default: () => 'telegram',

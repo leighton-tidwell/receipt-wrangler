@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { Command, END, interrupt } from '@langchain/langgraph';
+import { END, interrupt } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 
 import { SYSTEM_PROMPT } from '@/server/agent/prompts.js';
@@ -25,47 +25,47 @@ const parserModel = new ChatOpenAI({
 export async function collectImagesNode(state: ReceiptGraphStateType) {
   // Web channel uploads all images at once — skip collection loop.
   if (state.channel === 'web' || state.textContent) {
-    return {};
+    return { collectionDone: true };
   }
 
-  // Loop: interrupt → receive resume value → either continue collecting or move on.
-  // Each iteration commits state updates via the Command returned from interrupt.
+  const resume = interrupt({
+    type: 'collect_images',
+    imageCount: state.pendingImages.length,
+    prompt:
+      state.pendingImages.length === 0
+        ? 'Send one or more receipt photos.'
+        : `Got ${state.pendingImages.length} image${state.pendingImages.length === 1 ? '' : 's'}. Send more or tap Done.`,
+    actions: [
+      { id: 'done', label: 'Done ✅', disabled: state.pendingImages.length === 0 },
+      { id: 'cancel', label: 'Cancel ❌' },
+    ],
+  });
 
-  while (true) {
-    const resume = interrupt({
-      type: 'collect_images',
-      imageCount: state.pendingImages.length,
-      prompt:
-        state.pendingImages.length === 0
-          ? 'Send one or more receipt photos.'
-          : `Got ${state.pendingImages.length} image${state.pendingImages.length === 1 ? '' : 's'}. Send more or tap Done.`,
-      actions: [
-        { id: 'done', label: 'Done ✅', disabled: state.pendingImages.length === 0 },
-        { id: 'cancel', label: 'Cancel ❌' },
-      ],
-    });
-
-    if (resume?.cancel) {
-      return new Command({ goto: END });
-    }
-    if (resume?.done && state.pendingImages.length > 0) {
-      return {};
-    }
-    if (resume?.addImages?.length) {
-      state = {
-        ...state,
-        pendingImages: [...state.pendingImages, ...resume.addImages],
-        userGuidance:
-          resume.guidance && !state.userGuidance
-            ? resume.guidance
-            : resume.guidance
-              ? `${state.userGuidance}\n${resume.guidance}`
-              : state.userGuidance,
-      };
-      // Loop and interrupt again with the new count.
-    }
-    // Unknown payload → re-interrupt.
+  if (resume?.cancel) {
+    return { cancelled: true, collectionDone: false };
   }
+  if (resume?.done && state.pendingImages.length > 0) {
+    return { collectionDone: true };
+  }
+  if (resume?.addImages?.length) {
+    const combinedGuidance = resume.guidance
+      ? state.userGuidance
+        ? `${state.userGuidance}\n${resume.guidance}`
+        : resume.guidance
+      : state.userGuidance;
+    return {
+      pendingImages: resume.addImages,
+      userGuidance: combinedGuidance,
+      collectionDone: false,
+    };
+  }
+  return { collectionDone: false };
+}
+
+export function routeAfterCollect(state: ReceiptGraphStateType) {
+  if (state.cancelled) return END;
+  if (state.collectionDone) return 'parseReceipt';
+  return 'collectImages';
 }
 
 export async function parseReceiptNode(state: ReceiptGraphStateType) {
