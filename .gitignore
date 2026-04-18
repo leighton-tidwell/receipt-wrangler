@@ -31,3 +31,10 @@ pnpm-debug.log*
 
 # Test coverage
 coverage/
+
+# LangGraph checkpoint database
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

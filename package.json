@@ -63,9 +63,14 @@
     "vite": "^5.1.4"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.73",
+    "@ag-ui/core": "^0.0.52",
+    "@copilotkit/runtime": "^1.56.2",
     "@fontsource/inter": "^5.2.8",
-    "ai": "6.0.0-beta.120",
+    "@langchain/core": "^1.1.40",
+    "@langchain/langgraph": "^1.2.9",
+    "@langchain/langgraph-checkpoint-sqlite": "^1.0.1",
+    "@langchain/openai": "^1.4.4",
+    "better-sqlite3": "^12.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookie-parser": "^1.4.7",
