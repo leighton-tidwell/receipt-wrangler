@@ -2,15 +2,29 @@ import { config } from '@/server/config.js';
 
 const TELEGRAM_API = `https://api.telegram.org/bot${config.telegramBotToken}`;
 
-export async function sendMessage(chatId: string, text: string): Promise<void> {
+export interface InlineButton {
+  text: string;
+  callback_data: string;
+}
+
+export async function sendMessage(
+  chatId: string,
+  text: string,
+  buttons?: InlineButton[][]
+): Promise<void> {
+  const body: Record<string, unknown> = {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+  };
+  if (buttons && buttons.length > 0) {
+    body.reply_markup = { inline_keyboard: buttons };
+  }
+
   const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: 'HTML',
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -20,9 +34,21 @@ export async function sendMessage(chatId: string, text: string): Promise<void> {
   }
 }
 
-export async function sendToSender(chatId: string, text: string): Promise<void> {
+export async function sendToSender(
+  chatId: string,
+  text: string,
+  buttons?: InlineButton[][]
+): Promise<void> {
   console.log(`[TG -> ${chatId}] ${text}`);
-  await sendMessage(chatId, text);
+  await sendMessage(chatId, text, buttons);
+}
+
+export async function answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
+  await fetch(`${TELEGRAM_API}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
+  });
 }
 
 export async function sendToReceiver(text: string): Promise<void> {

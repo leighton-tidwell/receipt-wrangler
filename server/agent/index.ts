@@ -1,114 +1,49 @@
-import { openai } from '@ai-sdk/openai';
-import { Output, stepCountIs, ToolLoopAgent as Agent } from 'ai';
-import { z } from 'zod';
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { ChatOpenAI } from '@langchain/openai';
 
 import { SYSTEM_PROMPT } from '@/server/agent/prompts.js';
-import { verifyTotals } from '@/server/agent/tools.js';
 import { config } from '@/server/config.js';
 import type { ParsedReceipt } from '@/server/state/conversation.js';
+import { receiptResponseSchema } from '@/shared/receipt-schema.js';
 
-const receiptItemSchema = z.object({
-  name: z.string(),
-  price: z.number(),
-  taxable: z.boolean(),
-  unclear: z.boolean().optional().default(false),
-});
-
-const categoryBreakdownSchema = z.object({
-  items: z.array(receiptItemSchema),
-  subtotal: z.number(),
-  fees: z.number(),
-  tax: z.number(),
-  total: z.number(),
-});
-
-const creditSchema = z.object({
-  amount: z.number(),
-  targetCategory: z.string().optional(),
-});
-
-const receiptResponseSchema = z.object({
-  storeName: z.string(),
-  date: z.string(),
-  missingStoreName: z.boolean(),
-  missingDate: z.boolean(),
-  categories: z.record(z.string(), categoryBreakdownSchema),
-  originalTotal: z.number(),
-  hasUnclearItems: z.boolean().optional().default(false),
-  hasMissingItems: z.boolean().optional().default(false),
-  credit: creditSchema.optional(),
-});
-
-// Ensure OpenAI API key is set
 process.env.OPENAI_API_KEY = config.openaiApiKey;
 
-const receiptAgent = new Agent({
-  model: openai('gpt-5-mini'),
-  instructions: SYSTEM_PROMPT,
-  tools: { verifyTotals },
-  output: Output.object({ schema: receiptResponseSchema }),
-  stopWhen: stepCountIs(5),
-});
+const parserModel = new ChatOpenAI({
+  model: 'gpt-5-mini',
+  apiKey: config.openaiApiKey,
+}).withStructuredOutput(receiptResponseSchema, { name: 'receipt' });
 
 interface AgentResponse {
   parsedReceipt: ParsedReceipt | null;
   error: string | null;
 }
 
+/**
+ * Stateless receipt parser. Used directly by the web flow and by the
+ * parseReceipt graph node (via the same ChatOpenAI instance). Kept as a
+ * thin wrapper so the web upload routes don't need to know about the graph.
+ */
 export async function processReceipt(
   imageUrls: string[],
   textContent: string | null,
   userGuidance: string | null
 ): Promise<AgentResponse> {
   try {
-    // Build the prompt text
     let promptText = 'Please categorize this receipt.';
-    if (textContent) {
-      promptText += `\n\nReceipt text:\n${textContent}`;
-    }
-    if (userGuidance) {
-      promptText += `\n\nUser instructions: ${userGuidance}`;
-    }
+    if (textContent) promptText += `\n\nReceipt text:\n${textContent}`;
+    if (userGuidance) promptText += `\n\nUser instructions: ${userGuidance}`;
 
-    // Build the message content array
-    type MessageContent = Array<{ type: 'text'; text: string } | { type: 'image'; image: URL }>;
-    const content: MessageContent = [{ type: 'text', text: promptText }];
-
-    // Add images if present
+    const parts: Array<
+      { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }
+    > = [{ type: 'text', text: promptText }];
     for (const url of imageUrls) {
-      content.push({ type: 'image', image: new URL(url) });
+      parts.push({ type: 'image_url', image_url: { url } });
     }
 
-    const result = await receiptAgent.generate({
-      messages: [
-        {
-          role: 'user' as const,
-          content,
-        },
-      ],
-    });
-
-    // Log agent execution details
-    console.log('[Agent] Steps:', result.steps?.length ?? 0);
-    if (result.steps) {
-      for (const [i, step] of result.steps.entries()) {
-        console.log(`[Agent] Step ${i + 1}:`, {
-          toolCalls:
-            step.toolCalls?.map((tc) => ({
-              name: tc.toolName,
-              input: 'input' in tc ? tc.input : undefined,
-            })) ?? [],
-          toolResults: step.toolResults?.length ?? 0,
-          finishReason: step.finishReason,
-        });
-      }
-    }
-    console.log('[Agent] Final output received:', !!result.output);
-
-    const output = result.output;
-    if (!output) {
-      throw new Error('No output received from agent');
-    }
+    const output = await parserModel.invoke([
+      new SystemMessage(SYSTEM_PROMPT),
+      new HumanMessage({ content: parts }),
+    ]);
 
     const receipt: ParsedReceipt = {
       storeName: output.storeName,
@@ -119,13 +54,15 @@ export async function processReceipt(
       originalTotal: output.originalTotal,
       hasUnclearItems: output.hasUnclearItems ?? false,
       hasMissingItems: output.hasMissingItems ?? false,
-      credit: output.credit,
+      credit: output.credit
+        ? {
+            amount: output.credit.amount,
+            targetCategory: output.credit.targetCategory ?? undefined,
+          }
+        : undefined,
     };
 
-    return {
-      parsedReceipt: receipt,
-      error: null,
-    };
+    return { parsedReceipt: receipt, error: null };
   } catch (error) {
     console.error('Error processing receipt:', error);
     return {
