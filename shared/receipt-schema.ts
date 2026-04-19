@@ -20,12 +20,28 @@ export const creditSchema = z.object({
   targetCategory: z.string().optional(),
 });
 
+// OpenAI's strict json_schema mode rejects `propertyNames` (which z.record
+// emits), so categories is a fixed object of the 9 budget categories from
+// the system prompt. If a receipt has no items in a category, return it with
+// empty items and zeros.
+export const categoriesSchema = z.object({
+  groceries: categoryBreakdownSchema,
+  babySupplies: categoryBreakdownSchema,
+  bathroomSupplies: categoryBreakdownSchema,
+  houseSupplies: categoryBreakdownSchema,
+  pharmacy: categoryBreakdownSchema,
+  clothing: categoryBreakdownSchema,
+  petSupplies: categoryBreakdownSchema,
+  charity: categoryBreakdownSchema,
+  unknown: categoryBreakdownSchema,
+});
+
 export const receiptResponseSchema = z.object({
   storeName: z.string(),
   date: z.string(),
   missingStoreName: z.boolean(),
   missingDate: z.boolean(),
-  categories: z.record(z.string(), categoryBreakdownSchema),
+  categories: categoriesSchema,
   originalTotal: z.number(),
   hasUnclearItems: z.boolean().optional().default(false),
   hasMissingItems: z.boolean().optional().default(false),
