@@ -97,7 +97,12 @@ export async function parseReceiptNode(state: ReceiptGraphStateType) {
       originalTotal: output.originalTotal,
       hasUnclearItems: output.hasUnclearItems ?? false,
       hasMissingItems: output.hasMissingItems ?? false,
-      credit: output.credit,
+      credit: output.credit
+        ? {
+            amount: output.credit.amount,
+            targetCategory: output.credit.targetCategory ?? undefined,
+          }
+        : undefined,
     };
     return { parsedReceipt: receipt };
   } catch (err) {
