@@ -40,6 +40,9 @@ export default defineConfig(({ mode }) => ({
     proxy: {
       '/api': 'http://localhost:3000',
       '/upload': 'http://localhost:3000',
+      '/auth': 'http://localhost:3000',
+      '/webhook': 'http://localhost:3000',
+      '/health': 'http://localhost:3000',
     },
   },
 }));
